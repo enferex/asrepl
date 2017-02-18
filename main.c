@@ -54,14 +54,8 @@ static pid_t init_engine(void)
     if (pid > 0) {
         /* Parent with child's pid.  Wait for the child. */
         int status;
-        pid_t ret = waitpid(pid, &status, __WALL);
-
-        if (pid == ret && WIFSTOPPED(status)) {
-            for (int i=0; i<10; ++i)
-              ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL);
-            return pid;
-        }
-        return 0;
+        const pid_t ret = waitpid(pid, &status, __WALL);
+        return (pid == ret && WIFSTOPPED(status)) ? pid : 0;
     }
     else if (pid == 0) {
         /* Child (tracee) */
@@ -69,8 +63,6 @@ static pid_t init_engine(void)
             ERF("Error setting traceme in the child process: %s",
                 strerror(errno));
         }
-
-        raise(SIGSTOP);
 
         for ( ;; ) {
             __asm__ __volatile__ ("nop\n");
@@ -80,6 +72,7 @@ static pid_t init_engine(void)
             __asm__ __volatile__ ("nop\n");
             __asm__ __volatile__ ("nop\n");
             __asm__ __volatile__ ("nop\n");
+            __asm__ __volatile__ ("int $3\n");
             __asm__ __volatile__ ("nop\n");
             __asm__ __volatile__ ("nop\n");
             __asm__ __volatile__ ("nop\n");
@@ -179,13 +172,40 @@ static _Bool assemble(const char *line, ctx_t *ctx)
 }
 
 #define REG64(_regs, _reg)\
-    printf("%s\t 0x%llx\n", #_reg, _regs->_reg);
+    printf("%s\t 0x%llx\n", #_reg, (_regs)->_reg)
 
-static void dump_regs(const struct user_regs_struct *regs)
+static void get_regs(pid_t pid, struct user_regs_struct *gpregs)
+{
+    memset(gpregs, 0, sizeof(*gpregs));
+    ptrace(PTRACE_GETREGS, pid, NULL, gpregs);
+}
+
+static uintptr_t get_pc(pid_t pid)
+{
+    struct user_regs_struct gpregs;
+    get_regs(pid, &gpregs);
+    return gpregs.rip;
+}
+
+static uintptr_t read_text(pid_t pid, uintptr_t addr)
+{
+    uintptr_t data;
+    uintptr_t text = ptrace(PTRACE_PEEKTEXT, pid, addr, &data);
+    return text;
+}
+
+static void dump_regs(pid_t pid)
 {
 #ifdef __x86_64__
+    uintptr_t text;
+    struct user_regs_struct regs;
+
+    get_regs(pid, &regs);
+    text = read_text(pid, regs.rip);
+
 //    REG64(regs, eflags);
-    REG64(regs, rip);
+    REG64(&regs, rip);
+    printf("rip value: %p\n", (void *)text);
 //    REG64(regs, cs);
 //    REG64(regs, ds);
 //    REG64(regs, es)
@@ -194,7 +214,7 @@ static void dump_regs(const struct user_regs_struct *regs)
 //    REG64(regs, ss);
 //    REG64(regs, rbp);
 //    REG64(regs, rsp);
-    REG64(regs, rax);
+    REG64(&regs, rax);
 //    REG64(regs, rbx);
 //    REG64(regs, rcx);
 //    REG64(regs, rdx);
@@ -214,20 +234,17 @@ static void dump_regs(const struct user_regs_struct *regs)
 #endif /* __x86_64__ */
 }
 
-static _Bool execute(pid_t pid, const ctx_t *ctx)
+static _Bool execute(pid_t pid, const ctx_t *ctx, uintptr_t pc)
 {
     int i, status;
     pid_t ret;
-    word_t pc;
     uint8_t *insns;
-    struct user_regs_struct gpregs;
 
-    ptrace(PTRACE_GETREGS, pid, NULL, &gpregs);
     printf("== Before (pid %d) ==\n", pid);
-    dump_regs(&gpregs);
+    dump_regs(pid);
 
     /* POKETEXT operates on word size units */
-    pc = gpregs.rip;
+    pc = get_pc(pid);
     insns = ctx->text;
     for (i=0; i<1/*ctx->length / sizeof(word_t)*/; ++i) {
         ptrace(PTRACE_POKETEXT, pid, (void *)pc, (void *)insns);
@@ -241,9 +258,8 @@ static _Bool execute(pid_t pid, const ctx_t *ctx)
     if (ret != 0 && !WIFSTOPPED(status))
       ERF("Error waiting for engine to single step\n");
 
-    ptrace(PTRACE_GETREGS, pid, NULL, &gpregs);
     printf("== After  (pid %d) ==\n", pid);
-    dump_regs(&gpregs);
+    dump_regs(pid);
 
     return true;
 }
@@ -268,7 +284,8 @@ int main(void)
     /* Engine has started, now query user for asm code */
     while ((line = readline(PROMPT))) {
         if (assemble(line, &ctx)) {
-            execute(engine, &ctx);
+            uintptr_t pc = get_pc(engine);
+            execute(engine, &ctx, pc);
             cleanup(&ctx);
             add_history(line);
         }
