@@ -208,25 +208,24 @@ static uintptr_t get_pc(pid_t pid)
     return gpregs.rip;
 }
 
+#if 0
 static uintptr_t read_text(pid_t pid, uintptr_t addr)
 {
     uintptr_t data;
     uintptr_t text = ptrace(PTRACE_PEEKTEXT, pid, addr, &data);
     return text;
 }
+#endif
 
 static void dump_regs(pid_t pid)
 {
 #ifdef __x86_64__
-    uintptr_t text;
     struct user_regs_struct regs;
 
     get_regs(pid, &regs);
-    text = read_text(pid, regs.rip);
 
 //    REG64(regs, eflags);
     REG64(&regs, rip);
-    printf("rip value: %p\n", (void *)text);
 //    REG64(regs, cs);
 //    REG64(regs, ds);
 //    REG64(regs, es)
