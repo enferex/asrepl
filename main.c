@@ -12,28 +12,22 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <sys/ptrace.h>
+#include "repl_commands.h"
 
-#define TAG     "asm"
-#define PROMPTC "> "
-#define PROMPT  TAG PROMPTC
+/* Temporary file names for assembly generation */
+#define ASM_OBJ   "./.asrepl.temp.o"
+#define ASM_SRC   "./.asrepl.temp.s"
+#define ASM_FLAGS " "
+#define ASM_CMD   ASSEMBLER " " ASM_SRC " " ASM_FLAGS " -o " ASM_OBJ
 
-#define ERR(_msg, ...) \
-    fprintf(stderr, TAG " error" PROMPTC " " _msg  "\n", ##__VA_ARGS__)
-
-#define ERF(_msg, ...)                                                       \
-    do {                                                                     \
-        fprintf(stderr, TAG " error" PROMPTC " " _msg  "\n", ##__VA_ARGS__); \
-        exit(EXIT_FAILURE);                                                  \
-    } while (0)
-
+/* Ptrace operates on word size thingies */
 typedef unsigned long word_t;
 
 /* Size agnostic ELF section header */
 typedef struct _shdr_t
 {
     _Bool is_64bit;
-    union
-    {
+    union {
         Elf64_Shdr ver64;
         Elf32_Shdr ver32;
     } u;
@@ -64,6 +58,7 @@ static pid_t init_engine(void)
                 strerror(errno));
         }
 
+        /* Just a ton of nops for space */
         for ( ;; ) {
             __asm__ __volatile__ ("nop\n");
             __asm__ __volatile__ ("nop\n");
@@ -72,7 +67,14 @@ static pid_t init_engine(void)
             __asm__ __volatile__ ("nop\n");
             __asm__ __volatile__ ("nop\n");
             __asm__ __volatile__ ("nop\n");
-            __asm__ __volatile__ ("int $3\n");
+            __asm__ __volatile__ ("nop\n");
+
+            /* All instructions should be inserted here, since
+             * this is where the pc will be in the tracee as the int3 below
+             * will signal the tracer to start inserting instructions.
+             */
+            __asm__ __volatile__ ("int $3\n"); 
+
             __asm__ __volatile__ ("nop\n");
             __asm__ __volatile__ ("nop\n");
             __asm__ __volatile__ ("nop\n");
@@ -90,6 +92,9 @@ static pid_t init_engine(void)
     return 0; /* Error */
 }
 
+/* Returns 'true' on success, 'false' if the .text section
+ * cannot be found.
+ */
 static _Bool read_elf_text_section(const char *obj_name, ctx_t *ctx)
 {
     FILE *fp;
@@ -124,7 +129,6 @@ static _Bool read_elf_text_section(const char *obj_name, ctx_t *ctx)
         if ((SHDR(shdr,sh_type)   != SHT_PROGBITS) || 
              (SHDR(shdr,sh_flags) != (SHF_ALLOC | SHF_EXECINSTR)))
           continue;
-
         found = true;
         break;
     }
@@ -147,26 +151,43 @@ static _Bool read_elf_text_section(const char *obj_name, ctx_t *ctx)
     return found;
 }
 
+/* Returns 'true' on success and 'false' on error */
 static _Bool assemble(const char *line, ctx_t *ctx)
 {
     _Bool ret;
     FILE *fp;
-    
-    if (!(fp = fopen(".foo.asm", "w")))
-      return false;
+
+    /* If error reading file then exit immediately. */
+    if (!(fp = fopen(ASM_SRC, "w")))
+      ERF("Error reading temporary asm file: %s", ASM_SRC);
 
     /* Write line to a new asm file */
     ret = (fprintf(fp, "%s\n", line) >= 0);
     fclose(fp);
-    if (ret == false) /* Error */
-      return false;
+    if (ret == false) {
+        ERF("Error writing assembly to temp assembly file: %s, "
+            "check permissions.", ASM_SRC);
+    }
 
     /* Assemble */
-    fp = popen("as ./.foo.asm -o ./.foo.o", "r");
+    fp = popen(ASM_CMD, "r");
     pclose(fp);
-    
-    /* Locate the code blob */
-    read_elf_text_section("./.foo.o", ctx);
+
+    /* Dump assembly error, if there is one.
+     * asm generation errors are not fatal to asrepl.
+     */
+    _Bool popen_error = false;
+    if (popen_error) {
+        return true;
+    }
+    else { /* Success in generating asm */
+        ret = read_elf_text_section(ASM_OBJ, ctx);
+        if (ret == false) {
+            ERR("Error reading temp assembly file: %s "
+                "(check that it has proper permissions)",
+                ASM_OBJ);
+        }
+    }
 
     return ret;
 }
@@ -234,7 +255,7 @@ static void dump_regs(pid_t pid)
 #endif /* __x86_64__ */
 }
 
-static _Bool execute(pid_t pid, const ctx_t *ctx)
+static void execute(pid_t pid, const ctx_t *ctx)
 {
     int i, status;
     pid_t ret;
@@ -273,8 +294,6 @@ static _Bool execute(pid_t pid, const ctx_t *ctx)
     ptrace(PTRACE_SETREGS, pid, NULL, &regs);
     pc = get_pc(pid);
     printf("== Restored pc from %p to %p\n", (void *)orig_pc, (void *)pc);
-
-    return true;
 }
 
 static void cleanup(ctx_t *ctx)
@@ -296,6 +315,15 @@ int main(void)
 
     /* Engine has started, now query user for asm code */
     while ((line = readline(PROMPT))) {
+
+        /* Commands are optional, any commands (success or fail) should
+         * not terminate, go back to readline, and get more data.
+         */
+        const cmd_status_e cmd_status = cmd_process(line);
+        if (cmd_status ==CMD_ERROR || cmd_status == CMD_HANDLED)
+          continue;
+
+        /* Do the real work */
         if (assemble(line, &ctx)) {
             execute(engine, &ctx);
             cleanup(&ctx);
