@@ -26,7 +26,7 @@
         exit(EXIT_FAILURE);                                                  \
     } while (0)
 
-typedef long word_t;
+typedef unsigned long word_t;
 
 /* Size agnostic ELF section header */
 typedef struct _shdr_t
@@ -234,20 +234,26 @@ static void dump_regs(pid_t pid)
 #endif /* __x86_64__ */
 }
 
-static _Bool execute(pid_t pid, const ctx_t *ctx, uintptr_t pc)
+static _Bool execute(pid_t pid, const ctx_t *ctx)
 {
     int i, status;
     pid_t ret;
     uint8_t *insns;
+    uintptr_t orig_pc, pc;
+    struct user_regs_struct regs;
 
     printf("== Before (pid %d) ==\n", pid);
     dump_regs(pid);
 
+    /* We will restore the pc after we single step and gather registers */
+    orig_pc = get_pc(pid);
+
     /* POKETEXT operates on word size units */
-    pc = get_pc(pid);
+    pc = orig_pc;
     insns = ctx->text;
     for (i=0; i<1/*ctx->length / sizeof(word_t)*/; ++i) {
-        ptrace(PTRACE_POKETEXT, pid, (void *)pc, (void *)insns);
+        word_t word = *(word_t *)insns;
+        ptrace(PTRACE_POKETEXT, pid, (void *)pc, (void *)word);
         pc    += sizeof(word_t);
         insns += sizeof(word_t);
     }
@@ -258,8 +264,15 @@ static _Bool execute(pid_t pid, const ctx_t *ctx, uintptr_t pc)
     if (ret != 0 && !WIFSTOPPED(status))
       ERF("Error waiting for engine to single step\n");
 
-    printf("== After  (pid %d) ==\n", pid);
+    printf("== After (pid %d) ==\n", pid);
     dump_regs(pid);
+
+    /* Now that we have executed the instruction, restore the pc */
+    get_regs(pid, &regs);
+    regs.rip = orig_pc;
+    ptrace(PTRACE_SETREGS, pid, NULL, &regs);
+    pc = get_pc(pid);
+    printf("== Restored pc from %p to %p\n", (void *)orig_pc, (void *)pc);
 
     return true;
 }
@@ -284,8 +297,7 @@ int main(void)
     /* Engine has started, now query user for asm code */
     while ((line = readline(PROMPT))) {
         if (assemble(line, &ctx)) {
-            uintptr_t pc = get_pc(engine);
-            execute(engine, &ctx, pc);
+            execute(engine, &ctx);
             cleanup(&ctx);
             add_history(line);
         }
