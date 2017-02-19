@@ -18,8 +18,9 @@
 /* Temporary file names for assembly generation */
 #define ASM_OBJ   "./.asrepl.temp.o"
 #define ASM_SRC   "./.asrepl.temp.s"
+#define REDIR     "1>/dev/null"
 #define ASM_FLAGS "--64"
-#define ASM_CMD   ASSEMBLER " " ASM_SRC " " ASM_FLAGS " -o " ASM_OBJ
+#define ASM_CMD   ASSEMBLER " " ASM_SRC " " ASM_FLAGS " -o " ASM_OBJ " " REDIR
 
 /* Ptrace operates on word size thingies */
 typedef unsigned long word_t;
