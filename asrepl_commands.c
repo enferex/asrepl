@@ -33,10 +33,10 @@ static void cmd_help(const void *unused)
 {
     int i;
 
-    PR("Commands:");
+    PRINT("Commands:");
     for (i=0; i<sizeof(repl_commands)/sizeof(repl_commands[0]); ++i)
       if (!repl_commands[i].hidden)
-        PR("%8s: %s", repl_commands[i].command, repl_commands[i].description);
+        PRINT("%8s: %s",repl_commands[i].command,repl_commands[i].description);
 }
 
 static void cmd_exit(const void *unused)

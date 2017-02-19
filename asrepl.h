@@ -11,6 +11,9 @@
 #define PR(_msg, ...)\
     fprintf(stdout, TAG PROMPTC " " _msg "\n", ##__VA_ARGS__)
 
+#define PRINT(_msg, ...)\
+    fprintf(stdout, _msg "\n", ##__VA_ARGS__)
+
 #define ERR(_msg, ...) \
     fprintf(stderr, TAG " error" PROMPTC " " _msg  "\n", ##__VA_ARGS__)
 
