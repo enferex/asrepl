@@ -1,5 +1,6 @@
 * asm macros
 * ncurses interface
 * autotools
+* Drop popen, and handle all error handling internally.
 * support other architectures
 * goats
