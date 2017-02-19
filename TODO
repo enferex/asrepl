@@ -1,4 +1,5 @@
 * asm macros
+* user defined data blobs
 * ncurses interface
 * autotools
 * Drop popen, and handle all error handling internally.
