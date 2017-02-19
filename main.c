@@ -50,7 +50,7 @@
 /* Temporary file names for assembly generation */
 #define ASM_OBJ   "./.asrepl.temp.o"
 #define ASM_SRC   "./.asrepl.temp.s"
-#define REDIR     "1>/dev/null"
+#define REDIR     "2>&1 1>/dev/null"
 #define ASM_FLAGS "--64"
 #define ASM_CMD   ASSEMBLER " " ASM_SRC " " ASM_FLAGS " -o " ASM_OBJ " " REDIR
 
@@ -185,11 +185,23 @@ static _Bool read_elf_text_section(const char *obj_name, ctx_t *ctx)
     return found;
 }
 
+/* Only to be called from assemble(), where
+ * the str is to be at most sizeof(errbuf) and null terminated.
+ */
+static char *trim_newline(char *str)
+{
+    size_t len = strlen(str);
+    if (len-1 > 0 && str[len-1] == '\n')
+      str[len-1] = '\0';
+    return str;
+}
+
 /* Returns 'true' on success and 'false' on error */
 static _Bool assemble(const char *line, ctx_t *ctx)
 {
     _Bool ret;
     FILE *fp;
+    char errbuf[512];
 
     /* If error reading file then exit immediately. */
     if (!(fp = fopen(ASM_SRC, "w")))
@@ -209,6 +221,17 @@ static _Bool assemble(const char *line, ctx_t *ctx)
     /* If popen error, gracefully return */
     if (!fp)
       return true;
+
+    /* Capture any errors: bound this by 10 iterations,
+     * that should be enough to report an error of sizeof(errbuf)*10.
+     */
+    for (int i=0; i<10; ++i) {
+        char *msg = fgets(errbuf, sizeof(errbuf), fp);
+        if (msg)
+          ERR("%s", trim_newline(errbuf));
+        if (!msg || feof(fp) || ferror(fp))
+          break;
+    }
 
     pclose(fp);
 
