@@ -304,7 +304,7 @@ int main(void)
     ctx_t ctx;
 
 #ifndef __x86_64__
-    ERR("Sorry, asrepl only operates on x86-64 architectures.");
+    ERR("Sorry, %s only operates on x86-64 architectures.", NAME);
     exit(EXIT_FAILURE);
 #endif
 
