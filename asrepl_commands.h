@@ -1,5 +1,5 @@
-#ifndef __REPL_COMMANDS_H
-#define __REPL_COMMANDS_H
+#ifndef __ASREPL_COMMANDS_H
+#define __ASREPL_COMMANDS_H
 
 #define TAG     "asm"
 #define PROMPTC "> "
@@ -30,7 +30,9 @@ typedef enum _cmd_status_e
  *
  * If this is a command then CMD_HANDLED or CMD_ERROR is returned.
  * If this is unknown, assume it is assembly data, and return CMD_NOT_A_COMMAND.
+ *
+ * 'pid': pid of the process that we are executing user suppled asm on. 
  */
-extern cmd_status_e cmd_process(const char *line);
+extern cmd_status_e asrepl_cmd_process(const char *line, pid_t pid);
 
-#endif /* __REPL_COMMANDS_H */
+#endif /* __ASREPL_COMMANDS_H */

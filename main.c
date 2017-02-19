@@ -1,18 +1,19 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <string.h>
 #include <elf.h>
 #include <errno.h>
 #include <signal.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/user.h>
 #include <sys/wait.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <sys/ptrace.h>
-#include "repl_commands.h"
+#include "asrepl.h"
+#include "asrepl_commands.h"
 
 /* Temporary file names for assembly generation */
 #define ASM_OBJ   "./.asrepl.temp.o"
@@ -192,22 +193,6 @@ static _Bool assemble(const char *line, ctx_t *ctx)
     return ret;
 }
 
-#define REG64(_regs, _reg)\
-    printf("%s\t 0x%llx\n", #_reg, (_regs)->_reg)
-
-static void get_regs(pid_t pid, struct user_regs_struct *gpregs)
-{
-    memset(gpregs, 0, sizeof(*gpregs));
-    ptrace(PTRACE_GETREGS, pid, NULL, gpregs);
-}
-
-static uintptr_t get_pc(pid_t pid)
-{
-    struct user_regs_struct gpregs;
-    get_regs(pid, &gpregs);
-    return gpregs.rip;
-}
-
 #if 0
 static uintptr_t read_text(pid_t pid, uintptr_t addr)
 {
@@ -216,43 +201,6 @@ static uintptr_t read_text(pid_t pid, uintptr_t addr)
     return text;
 }
 #endif
-
-static void dump_regs(pid_t pid)
-{
-#ifdef __x86_64__
-    struct user_regs_struct regs;
-
-    get_regs(pid, &regs);
-
-//    REG64(regs, eflags);
-    REG64(&regs, rip);
-//    REG64(regs, cs);
-//    REG64(regs, ds);
-//    REG64(regs, es)
-//    REG64(regs, fs);
-//    REG64(regs, gs);
-//    REG64(regs, ss);
-//    REG64(regs, rbp);
-//    REG64(regs, rsp);
-    REG64(&regs, rax);
-//    REG64(regs, rbx);
-//    REG64(regs, rcx);
-//    REG64(regs, rdx);
-//    REG64(regs, rdi);
-//    REG64(regs, rsi);
-//    REG64(regs, r8);
-//    REG64(regs, r9);
-//    REG64(regs, r10);
-//    REG64(regs, r11);
-//    REG64(regs, r12);
-//    REG64(regs, r13);
-//    REG64(regs, r14);
-//    REG64(regs, r15);
-//    REG64(regs, fs_base);
-//    REG64(regs, gs_base);
-//    REG64(regs, orig_rax);
-#endif /* __x86_64__ */
-}
 
 static void execute(pid_t pid, const ctx_t *ctx)
 {
@@ -263,10 +211,10 @@ static void execute(pid_t pid, const ctx_t *ctx)
     struct user_regs_struct regs;
 
     printf("== Before (pid %d) ==\n", pid);
-    dump_regs(pid);
+    asrepl_dump_registers(pid);
 
     /* We will restore the pc after we single step and gather registers */
-    orig_pc = get_pc(pid);
+    orig_pc = asrepl_get_pc(pid);
 
     /* POKETEXT operates on word size units */
     pc = orig_pc;
@@ -285,14 +233,12 @@ static void execute(pid_t pid, const ctx_t *ctx)
       ERF("Error waiting for engine to single step\n");
 
     printf("== After (pid %d) ==\n", pid);
-    dump_regs(pid);
+    asrepl_dump_registers(pid);
 
     /* Now that we have executed the instruction, restore the pc */
-    get_regs(pid, &regs);
+    asrepl_get_registers(pid, &regs);
     regs.rip = orig_pc;
     ptrace(PTRACE_SETREGS, pid, NULL, &regs);
-    pc = get_pc(pid);
-    printf("== Restored pc from %p to %p\n", (void *)orig_pc, (void *)pc);
 }
 
 static void cleanup(ctx_t *ctx)
@@ -318,8 +264,8 @@ int main(void)
         /* Commands are optional, any commands (success or fail) should
          * not terminate, go back to readline, and get more data.
          */
-        const cmd_status_e cmd_status = cmd_process(line);
-        if (cmd_status ==CMD_ERROR || cmd_status == CMD_HANDLED)
+        const cmd_status_e cmd_status = asrepl_cmd_process(line, engine);
+        if (cmd_status == CMD_ERROR || cmd_status == CMD_HANDLED)
           continue;
 
         /* Do the real work */

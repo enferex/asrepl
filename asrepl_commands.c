@@ -1,18 +1,20 @@
-#include <stdio.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "repl_commands.h"
+#include "asrepl.h"
+#include "asrepl_commands.h"
 
 /* REPL Commands */
-static void cmd_help(void);
-static void cmd_exit(void);
-static void cmd_version(void);
+static void cmd_help(const void    *unused);
+static void cmd_exit(const void    *unused);
+static void cmd_version(const void *unused);
+static void cmd_dump(const void    *pid);
 struct {
     const char *command;
     const char *description;
-    void (*fn)(void);
+    void (*fn)(const void *);
     _Bool       hidden;
 } static const repl_commands[] = {
     {"help", "This help message.",        cmd_help,    false},
@@ -21,10 +23,11 @@ struct {
     {"wtf",  "This help message.",        cmd_help,    true},
     {"exit", "Exit",                      cmd_exit,    false},
     {"quit", "Exit",                      cmd_exit,    true},
+    {"regs", "Dump registers.",           cmd_dump,    false},
     {"ver",  "About/Version information", cmd_version, false},
 };
 
-static void cmd_help(void)
+static void cmd_help(const void *unused)
 {
     int i;
 
@@ -34,23 +37,31 @@ static void cmd_help(void)
         PR("%8s: %s", repl_commands[i].command, repl_commands[i].description);
 }
 
-static void cmd_exit(void)
+static void cmd_exit(const void *unused)
 {
     exit(EXIT_SUCCESS);
 }
 
-static void cmd_version(void)
+static void cmd_version(const void *unused)
 {
 }
 
-cmd_status_e cmd_process(const char *data)
+static void cmd_dump(const void *pid_ptr)
+{
+    if (pid_ptr == NULL)
+      return;
+
+    asrepl_dump_registers(*(pid_t *)pid_ptr);
+}
+
+cmd_status_e asrepl_cmd_process(const char *data, pid_t pid)
 {
     int i;
 
     for (i=0; i<sizeof(repl_commands)/sizeof(repl_commands[0]); ++i) {
         const char *cmd = repl_commands[i].command;
         if (strncmp(data, cmd, strlen(cmd)) == 0) {
-            repl_commands[i].fn();
+            repl_commands[i].fn((const void *)&pid);
             return CMD_HANDLED;
         }
     }
