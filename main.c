@@ -18,7 +18,7 @@
 /* Temporary file names for assembly generation */
 #define ASM_OBJ   "./.asrepl.temp.o"
 #define ASM_SRC   "./.asrepl.temp.s"
-#define ASM_FLAGS " "
+#define ASM_FLAGS "--64"
 #define ASM_CMD   ASSEMBLER " " ASM_SRC " " ASM_FLAGS " -o " ASM_OBJ
 
 /* Ptrace operates on word size thingies */
