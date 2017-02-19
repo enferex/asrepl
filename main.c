@@ -204,7 +204,7 @@ static _Bool assemble(const char *line, ctx_t *ctx)
     }
 
     /* Assemble */
-    fp = popen(ASM_CMD, "w");
+    fp = popen(ASM_CMD, "r");
 
     /* If popen error, gracefully return */
     if (!fp)
