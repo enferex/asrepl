@@ -7,8 +7,14 @@ LDFLAGS=-lreadline
 
 all: $(APP)
 
-$(APP): $(OBJS)
-	$(CC) $^ -o $@ $(LDFLAGS)
+.PHONY: sanity
+sanity:
+ifeq ($(AS),)
+$(error Could not locate assembler, please set AS manually in the makefile.)
+endif
+
+$(APP): sanity $(OBJS)
+	$(CC) $(OBJS) -o $@ $(LDFLAGS)
 
 clean:
 	$(RM) $(OBJS) $(APP)
