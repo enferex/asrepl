@@ -21,6 +21,8 @@ struct {
     {"h",    "This help message.",        cmd_help,    true},
     {"?",    "This help message.",        cmd_help,    true},
     {"wtf",  "This help message.",        cmd_help,    true},
+    {"q",    "Exit",                      cmd_exit,    true},
+    {"x",    "Exit",                      cmd_exit,    true},
     {"exit", "Exit",                      cmd_exit,    false},
     {"quit", "Exit",                      cmd_exit,    true},
     {"regs", "Dump registers.",           cmd_dump,    false},
