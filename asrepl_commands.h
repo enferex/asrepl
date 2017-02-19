@@ -1,22 +1,6 @@
 #ifndef __ASREPL_COMMANDS_H
 #define __ASREPL_COMMANDS_H
 
-#define TAG     "asm"
-#define PROMPTC "> "
-#define PROMPT  TAG PROMPTC
-
-#define PR(_msg, ...)\
-    fprintf(stdout, TAG PROMPTC " " _msg "\n", ##__VA_ARGS__)
-
-#define ERR(_msg, ...) \
-    fprintf(stderr, TAG " error" PROMPTC " " _msg  "\n", ##__VA_ARGS__)
-
-#define ERF(_msg, ...)                                                       \
-    do {                                                                     \
-        fprintf(stderr, TAG " error" PROMPTC " " _msg  "\n", ##__VA_ARGS__); \
-        exit(EXIT_FAILURE);                                                  \
-    } while (0)
-
 /* REPL command processing status */
 typedef enum _cmd_status_e
 {
