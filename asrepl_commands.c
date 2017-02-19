@@ -17,16 +17,18 @@ struct {
     void (*fn)(const void *);
     _Bool       hidden;
 } static const repl_commands[] = {
-    {"help", "This help message.",        cmd_help,    false},
-    {"h",    "This help message.",        cmd_help,    true},
-    {"?",    "This help message.",        cmd_help,    true},
-    {"wtf",  "This help message.",        cmd_help,    true},
-    {"q",    "Exit",                      cmd_exit,    true},
-    {"x",    "Exit",                      cmd_exit,    true},
-    {"exit", "Exit",                      cmd_exit,    false},
-    {"quit", "Exit",                      cmd_exit,    true},
-    {"regs", "Dump registers.",           cmd_dump,    false},
-    {"ver",  "About/Version information", cmd_version, false},
+    {"regs",    "Dump registers.",           cmd_dump,    false},
+    {"help",    "This help message.",        cmd_help,    false},
+    {"h",       "This help message.",        cmd_help,    true},
+    {"?",       "This help message.",        cmd_help,    true},
+    {"wtf",     "This help message.",        cmd_help,    true},
+    {"q",       "Exit",                      cmd_exit,    true},
+    {"x",       "Exit",                      cmd_exit,    true},
+    {"exit",    "Exit",                      cmd_exit,    false},
+    {"quit",    "Exit",                      cmd_exit,    true},
+    {"ver",     "About/Version information", cmd_version, false},
+    {"version", "About/Version information", cmd_version, true},
+    {"about",   "About/Version information", cmd_version, true},
 };
 
 static void cmd_help(const void *unused)
@@ -46,6 +48,11 @@ static void cmd_exit(const void *unused)
 
 static void cmd_version(const void *unused)
 {
+    printf("--> %s v%d.%d\n"
+           "--> %s\n"
+           "--> (c) %d, Matt Davis (enferex)\n",
+           NAME, MAJOR, MINOR,
+           LICENSE, YEAR);
 }
 
 static void cmd_dump(const void *pid_ptr)
