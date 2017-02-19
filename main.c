@@ -75,7 +75,7 @@ static pid_t init_engine(void)
              * this is where the pc will be in the tracee as the int3 below
              * will signal the tracer to start inserting instructions.
              */
-            __asm__ __volatile__ ("int $3\n"); 
+            __asm__ __volatile__ ("int $3\n");
 
             __asm__ __volatile__ ("nop\n");
             __asm__ __volatile__ ("nop\n");
@@ -106,7 +106,7 @@ static _Bool read_elf_text_section(const char *obj_name, ctx_t *ctx)
     Elf64_Ehdr hdr;
 
     if (!(fp = fopen(obj_name, "r")))
-        ERF("Error opening object file: %s (%s)\n", obj_name, strerror(errno));
+      return false;
 
     /* Get the ELF header */
     if (fread((void *)&hdr, 1, sizeof(hdr), fp) != sizeof(hdr))
@@ -128,7 +128,7 @@ static _Bool read_elf_text_section(const char *obj_name, ctx_t *ctx)
     /* For each section: Look for .text only */
     found = false;
     while (fread((void *)&shdr.u.ver64, 1, shdr_size, fp) == shdr_size) {
-        if ((SHDR(shdr,sh_type)   != SHT_PROGBITS) || 
+        if ((SHDR(shdr,sh_type)   != SHT_PROGBITS) ||
              (SHDR(shdr,sh_flags) != (SHF_ALLOC | SHF_EXECINSTR)))
           continue;
         found = true;
@@ -172,26 +172,20 @@ static _Bool assemble(const char *line, ctx_t *ctx)
     }
 
     /* Assemble */
-    fp = popen(ASM_CMD, "r");
+    fp = popen(ASM_CMD, "w");
+
+    /* If popen error, gracefully return */
+    if (!fp)
+      return true;
+
     pclose(fp);
 
-    /* Dump assembly error, if there is one.
-     * asm generation errors are not fatal to asrepl.
+    /* We might have generated bad assembly.
+     * 1) The user should get the error output from the assembler.
+     * 2) If there was an error, then the next call will fail.
+     *    Just ignore that error, and return false.
      */
-    _Bool popen_error = false;
-    if (popen_error) {
-        return true;
-    }
-    else { /* Success in generating asm */
-        ret = read_elf_text_section(ASM_OBJ, ctx);
-        if (ret == false) {
-            ERR("Error reading temp assembly file: %s "
-                "(check that it has proper permissions)",
-                ASM_OBJ);
-        }
-    }
-
-    return ret;
+    return read_elf_text_section(ASM_OBJ, ctx);
 }
 
 #if 0
@@ -205,22 +199,25 @@ static uintptr_t read_text(pid_t pid, uintptr_t addr)
 
 static void execute(pid_t pid, const ctx_t *ctx)
 {
-    int i, status;
+    int i, status, n_words;
     pid_t ret;
     uint8_t *insns;
     uintptr_t orig_pc, pc;
     struct user_regs_struct regs;
 
-    printf("== Before (pid %d) ==\n", pid);
-    asrepl_dump_registers(pid);
+    if (ctx->text == NULL)
+      return; /* Non-fatal error */
 
     /* We will restore the pc after we single step and gather registers */
     orig_pc = asrepl_get_pc(pid);
 
-    /* POKETEXT operates on word size units */
+    /* POKETEXT operates on word size units (round up) */
     pc = orig_pc;
     insns = ctx->text;
-    for (i=0; i<1/*ctx->length / sizeof(word_t)*/; ++i) {
+    n_words = (ctx->length / sizeof(word_t));
+    if (ctx->length % sizeof(word_t))
+      ++n_words;
+    for (i=0; i<n_words; ++i) {
         word_t word = *(word_t *)insns;
         ptrace(PTRACE_POKETEXT, pid, (void *)pc, (void *)word);
         pc    += sizeof(word_t);
@@ -232,9 +229,6 @@ static void execute(pid_t pid, const ctx_t *ctx)
     ret = waitpid(pid, &status, __WALL);
     if (ret != 0 && !WIFSTOPPED(status))
       ERF("Error waiting for engine to single step\n");
-
-    printf("== After (pid %d) ==\n", pid);
-    asrepl_dump_registers(pid);
 
     /* Now that we have executed the instruction, restore the pc */
     asrepl_get_registers(pid, &regs);
