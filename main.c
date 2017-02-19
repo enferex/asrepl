@@ -327,12 +327,8 @@ int main(void)
         if (assemble(line, &ctx)) {
             execute(engine, &ctx);
             cleanup(&ctx);
-            add_history(line);
         }
-        else {
-            free(line);
-            continue;
-        }
+        add_history(line);
     }
 
     return 0;
