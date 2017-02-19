@@ -10,7 +10,7 @@ all: $(APP)
 .PHONY: sanity
 sanity:
 ifeq ($(AS),)
-$(error Could not locate assembler, please set AS manually in the makefile.)
+$(error Could not locate assembler, please set AS manually in the Makefile.)
 endif
 
 $(APP): sanity $(OBJS)
