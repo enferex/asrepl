@@ -22,7 +22,6 @@ uintptr_t asrepl_get_pc(pid_t pid)
 
 void asrepl_dump_registers(pid_t pid)
 {
-#ifdef __x86_64__
     struct user_regs_struct regs;
 
     asrepl_get_registers(pid, &regs);
@@ -54,5 +53,4 @@ void asrepl_dump_registers(pid_t pid)
     REG64(&regs, fs_base);
     REG64(&regs, gs_base);
 /*    REG64(&regs, orig_rax); */
-#endif /* __x86_64__ */
 }

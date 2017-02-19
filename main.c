@@ -253,6 +253,11 @@ int main(void)
     pid_t engine;
     ctx_t ctx;
 
+#ifndef __x86_64__
+    ERR("Sorry, asrepl only operates on x86-64 architectures.");
+    exit(EXIT_FAILURE);
+#endif
+
     if ((engine = init_engine()) == 0) {
         ERR("Error starting engine process, terminating now.");
         exit(EXIT_FAILURE);
