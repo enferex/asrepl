@@ -2,6 +2,7 @@
  * BSD 3-Clause License
  *
  * Copyright (c) 2017, Matt Davis (enferex) https://github.com/enferex
+ * See "CONTRIBUTORS" file for other contributions since the initial release.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -54,10 +55,11 @@
 #define ASM_FLAGS "--64"
 #define ASM_CMD   ASSEMBLER " " ASM_SRC " " ASM_FLAGS " -o " ASM_OBJ " " REDIR
 
-// Adding for keystone-engine
+#ifdef USE_KEYSTONE
 #include <keystone/keystone.h>
 #define ARCH KS_ARCH_X86
 #define MODE KS_MODE_64
+#endif /* USE_KEYSTONE */
 
 /* Ptrace operates on word size thingies */
 typedef unsigned long word_t;
@@ -201,29 +203,29 @@ static char *trim_newline(char *str)
     return str;
 }
 
-static _Bool keyassemble(const char *line, ks_engine *ks, ctx_t *ctx)
+#ifdef USE_KEYSTONE
+static _Bool keystone_assemble(const char *line, ks_engine *ks, ctx_t *ctx)
 {
-	size_t count;
-	unsigned char *encode;
-	size_t size;
+    size_t count, size;
+    unsigned char *encode;
 
-	if(ks_asm(ks, line, 0, &encode, &size, &count)!= KS_ERR_OK){
-		ERR("Not a valid instruction!");
-		return false;
-	}
+    if (ks_asm(ks, line, 0, &encode, &size, &count)!= KS_ERR_OK) {
+        ERR("Not a valid instruction!");
+        return false;
+    }
 
-	// copy the bytes into the context
-	if(!(ctx->text = malloc(size)))
-		ERF("Error allocating data on .text");
+    /* Copy the bytes into the context */
+    if(!(ctx->text = malloc(size)))
+        ERF("Error allocating data on .text");
 
-	size_t i;
-	for(i = 0; i < size; i++){
-		ctx->text[i] = encode[i];
-	}
-	ctx->length = size;
-	ks_free(encode);
-	return true;
+    for (size_t i = 0; i < size; i++){
+      ctx->text[i] = encode[i];
+
+    ctx->length = size;
+    ks_free(encode);
+    return true;
 }
+#endif /* USE_KEYSTONE */
 
 /* Returns 'true' on success and 'false' on error */
 static _Bool assemble(const char *line, ctx_t *ctx)
@@ -326,24 +328,53 @@ static void cleanup(ctx_t *ctx)
     memset(ctx, 0, sizeof(ctx_t));
 }
 
-int main(void)
+static void usage(const char *execname)
 {
+    printf("Usage: %s [-h] [-v] "
+#ifdef USE_KEYSTONE
+           "[-k]"
+#endif
+           "\n"
+           " -h: This help message.\n"
+           " -v: Version information.\n",
+           execname);
+
+}
+
+int main(int argc, char **argv)
+{
+    int opt;
     char *line;
     pid_t engine;
     ctx_t ctx;
+    _Bool use_keystone, asm_result;
 
-    /* Setup Keystone instance */
-    ks_engine *ks;
-    ks_err err;
-
-    err = ks_open(ARCH,MODE,&ks);
-    if(err != KS_ERR_OK){
-	ERR("Failed on ks_open()");
-	exit(EXIT_FAILURE);
+    /* Setup defaults for command line args */
+    use_keystone = false;
+    while ((opt = getopt(argc, argv, "hkv")) != -1) {
+        switch (opt) {
+        case 'h': usage(argv[0]);   exit(EXIT_SUCCESS);
+        case 'v': asrepl_version(); exit(EXIT_SUCCESS);
+#ifdef USE_KEYSTONE
+        case 'k': use_keystone = true; break;
+#endif
+        default: break;
+        }
     }
-    /* Keystone is initialized */
 
-#ifndef __x86_64__
+#ifdef USE_KEYSTONE
+    /* Setup Keystone instance */
+    if (use_keystone) {
+        ks_engine *ks;
+        ks_err err;
+        err = ks_open(ARCH,MODE,&ks);
+        if(err != KS_ERR_OK){
+            ERR("Failed to initialize Keystone library: ks_open()");
+            exit(EXIT_FAILURE);
+        }
+    }
+#elif !defined(__x86_64__)
+    /* We only support gnu as 64bit if keystone is not supplied. */
     ERR("Sorry, %s only operates on x86-64 architectures.", NAME);
     exit(EXIT_FAILURE);
 #endif
@@ -364,13 +395,25 @@ int main(void)
           continue;
 
         /* Do the real work */
-        if (keyassemble(line, ks, &ctx)) {
+        asm_result = false;
+#ifdef USE_KEYSTONE
+        if (use_keystone)
+          asm_result = keystone_assemble(line, ks, &ctx);
+#endif
+        if (!use_keystone)
+          asm_result = assemble(line, &ctx);
+
+        /* The assembly was generated correctly, execute it. */
+        if (asm_result == true) {
             execute(engine, &ctx);
             cleanup(&ctx);
         }
         add_history(line);
     }
 
-    ks_close(ks);	//close keystone instance
+#ifdef USE_KEYSTONE
+    ks_close(ks);
+#endif
+
     return 0;
 }
