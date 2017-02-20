@@ -7,6 +7,7 @@ at the register state.
 How asrepl Works
 ----------------
 asrepl works by the following steps:
+
 1. Fork a process that will be used to execute user supplied asm.  The
    terminology to recognize is: "The parent process forks the child process."
 2. The parent process listens for user supplied asm instructions.
