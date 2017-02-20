@@ -42,7 +42,6 @@
 #define NAME    "asrepl"
 #define MAJOR   0
 #define MINOR   1
-#define LICENSE "GPLv2"
 #define YEAR    2017
 #define TAG     "asm"
 #define PROMPTC "> "
