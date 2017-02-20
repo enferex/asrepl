@@ -39,6 +39,11 @@
 #define REG64(_regs, _reg) \
     printf("%s\t 0x%llx\n", #_reg, (_regs)->_reg)
 
+void asrepl_version(void)
+{
+    printf("%s v%d.%d -- %d\n", NAME, MAJOR, MINOR, YEAR);
+}
+
 void asrepl_get_registers(pid_t pid, struct user_regs_struct *gpregs)
 {
     memset(gpregs, 0, sizeof(*gpregs));

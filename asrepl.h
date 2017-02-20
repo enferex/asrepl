@@ -60,6 +60,7 @@
         exit(EXIT_FAILURE);                                                  \
     } while (0)
 
+extern void asrepl_version(void);
 extern uintptr_t asrepl_get_pc(pid_t pid);
 extern void asrepl_get_registers(pid_t pid, struct user_regs_struct *regs);
 

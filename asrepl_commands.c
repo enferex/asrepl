@@ -80,11 +80,7 @@ static void cmd_exit(const void *unused)
 
 static void cmd_version(const void *unused)
 {
-    printf("--> %s v%d.%d\n"
-           "--> %s\n"
-           "--> (c) %d, Matt Davis (enferex)\n",
-           NAME, MAJOR, MINOR,
-           LICENSE, YEAR);
+    asrepl_version();
 }
 
 static void cmd_dump(const void *pid_ptr)
