@@ -41,7 +41,7 @@
 
 void asrepl_version(void)
 {
-    printf("%s v%d.%d -- %d\n", NAME, MAJOR, MINOR, YEAR);
+    printf("%s v%d.%d, (c)%d\n", NAME, MAJOR, MINOR, YEAR);
 }
 
 void asrepl_get_registers(pid_t pid, struct user_regs_struct *gpregs)
