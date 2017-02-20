@@ -54,6 +54,11 @@
 #define ASM_FLAGS "--64"
 #define ASM_CMD   ASSEMBLER " " ASM_SRC " " ASM_FLAGS " -o " ASM_OBJ " " REDIR
 
+// Adding for keystone-engine
+#include <keystone/keystone.h>
+#define ARCH KS_ARCH_X86
+#define MODE KS_MODE_64
+
 /* Ptrace operates on word size thingies */
 typedef unsigned long word_t;
 
@@ -196,6 +201,30 @@ static char *trim_newline(char *str)
     return str;
 }
 
+static _Bool keyassemble(const char *line, ks_engine *ks, ctx_t *ctx)
+{
+	size_t count;
+	unsigned char *encode;
+	size_t size;
+
+	if(ks_asm(ks, line, 0, &encode, &size, &count)!= KS_ERR_OK){
+		ERR("Not a valid instruction!");
+		return false;
+	}
+
+	// copy the bytes into the context
+	if(!(ctx->text = malloc(size)))
+		ERF("Error allocating data on .text");
+
+	size_t i;
+	for(i = 0; i < size; i++){
+		ctx->text[i] = encode[i];
+	}
+	ctx->length = size;
+	ks_free(encode);
+	return true;
+}
+
 /* Returns 'true' on success and 'false' on error */
 static _Bool assemble(const char *line, ctx_t *ctx)
 {
@@ -303,6 +332,17 @@ int main(void)
     pid_t engine;
     ctx_t ctx;
 
+    /* Setup Keystone instance */
+    ks_engine *ks;
+    ks_err err;
+
+    err = ks_open(ARCH,MODE,&ks);
+    if(err != KS_ERR_OK){
+	ERR("Failed on ks_open()");
+	exit(EXIT_FAILURE);
+    }
+    /* Keystone is initialized */
+
 #ifndef __x86_64__
     ERR("Sorry, %s only operates on x86-64 architectures.", NAME);
     exit(EXIT_FAILURE);
@@ -324,12 +364,13 @@ int main(void)
           continue;
 
         /* Do the real work */
-        if (assemble(line, &ctx)) {
+        if (keyassemble(line, ks, &ctx)) {
             execute(engine, &ctx);
             cleanup(&ctx);
         }
         add_history(line);
     }
 
+    ks_close(ks);	//close keystone instance
     return 0;
 }
