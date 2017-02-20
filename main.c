@@ -31,14 +31,12 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
-#include <elf.h>
 #include <errno.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 #include <sys/user.h>
 #include <sys/wait.h>
@@ -47,40 +45,7 @@
 #include <sys/ptrace.h>
 #include "asrepl.h"
 #include "asrepl_commands.h"
-
-/* Temporary file names for assembly generation */
-#define ASM_OBJ   "./.asrepl.temp.o"
-#define ASM_SRC   "./.asrepl.temp.s"
-#define REDIR     "2>&1 1>/dev/null"
-#define ASM_FLAGS "--64"
-#define ASM_CMD   ASSEMBLER " " ASM_SRC " " ASM_FLAGS " -o " ASM_OBJ " " REDIR
-
-#ifdef USE_KEYSTONE
-#include <keystone/keystone.h>
-#define ARCH KS_ARCH_X86
-#define MODE KS_MODE_64
-#endif /* USE_KEYSTONE */
-
-/* Ptrace operates on word size thingies */
-typedef unsigned long word_t;
-
-/* Size agnostic ELF section header */
-typedef struct _shdr_t
-{
-    _Bool is_64bit;
-    union {
-        Elf64_Shdr ver64;
-        Elf32_Shdr ver32;
-    } u;
-} shdr_t;
-#define SHDR(_shdr, _field) \
-    ((_shdr).is_64bit ? (_shdr).u.ver64._field : (_shdr).u.ver32._field)
-
-typedef struct _context_t
-{
-    uint8_t *text;
-    size_t   length; /* Bytes of .text */
-} ctx_t;
+#include "assembler.h"
 
 static pid_t init_engine(void)
 {
@@ -132,156 +97,6 @@ static pid_t init_engine(void)
 
     return 0; /* Error */
 }
-
-/* Returns 'true' on success, 'false' if the .text section
- * cannot be found.
- */
-static _Bool read_elf_text_section(const char *obj_name, ctx_t *ctx)
-{
-    FILE *fp;
-    size_t shdr_size;
-    _Bool found;
-    shdr_t shdr = {0};
-    Elf64_Ehdr hdr;
-
-    if (!(fp = fopen(obj_name, "r")))
-      return false;
-
-    /* Get the ELF header */
-    if (fread((void *)&hdr, 1, sizeof(hdr), fp) != sizeof(hdr))
-      ERF("Error reading header from %s", obj_name);
-
-    if (memcmp(hdr.e_ident, ELFMAG, SELFMAG) != 0)
-      ERF("Error: Invalid ELF file: %s", obj_name);
-
-    fseek(fp, hdr.e_shoff, SEEK_SET);
-    if (hdr.e_ident[EI_CLASS] == ELFCLASS64) {
-        shdr_size = sizeof(Elf64_Shdr);
-        shdr.is_64bit = true;
-    }
-    else if (hdr.e_ident[EI_CLASS] == ELFCLASS32)
-      shdr_size = sizeof(Elf32_Shdr);
-    else
-      ERF("Invalid binary, expected 32 or 64 bit");
-
-    /* For each section: Look for .text only */
-    found = false;
-    while (fread((void *)&shdr.u.ver64, 1, shdr_size, fp) == shdr_size) {
-        if ((SHDR(shdr,sh_type)   != SHT_PROGBITS) ||
-             (SHDR(shdr,sh_flags) != (SHF_ALLOC | SHF_EXECINSTR)))
-          continue;
-        found = true;
-        break;
-    }
-
-    if (found) {
-        /* Hopefully .text */
-        if (!(ctx->text = malloc(SHDR(shdr,sh_size))))
-          ERF("Error allocating room to store the binary's read-only data");
-
-        if (!(ctx->text = malloc(SHDR(shdr,sh_size))))
-          ERF("Error allocating data from .text");
-
-        /* Read in .text contents */
-        fseek(fp, SHDR(shdr,sh_offset), SEEK_SET);
-        if (fread(ctx->text, 1, SHDR(shdr,sh_size), fp) != SHDR(shdr,sh_size))
-          ERF("Error reading section contents");
-        ctx->length = SHDR(shdr,sh_size);
-    }
-
-    return found;
-}
-
-/* Only to be called from assemble(), where
- * the str is to be at most sizeof(errbuf) and null terminated.
- */
-static char *trim_newline(char *str)
-{
-    size_t len = strlen(str);
-    if (len-1 > 0 && str[len-1] == '\n')
-      str[len-1] = '\0';
-    return str;
-}
-
-#ifdef USE_KEYSTONE
-static _Bool keystone_assemble(const char *line, ks_engine *ks, ctx_t *ctx)
-{
-    size_t count, size;
-    unsigned char *encode;
-
-    if (ks_asm(ks, line, 0, &encode, &size, &count)!= KS_ERR_OK) {
-        ERR("Not a valid instruction!");
-        return false;
-    }
-
-    /* Copy the bytes into the context */
-    if(!(ctx->text = malloc(size)))
-        ERF("Error allocating data on .text");
-
-    for (size_t i = 0; i < size; i++){
-      ctx->text[i] = encode[i];
-
-    ctx->length = size;
-    ks_free(encode);
-    return true;
-}
-#endif /* USE_KEYSTONE */
-
-/* Returns 'true' on success and 'false' on error */
-static _Bool assemble(const char *line, ctx_t *ctx)
-{
-    _Bool ret;
-    FILE *fp;
-    char errbuf[512];
-
-    /* If error reading file then exit immediately. */
-    if (!(fp = fopen(ASM_SRC, "w")))
-      ERF("Error reading temporary asm file: %s", ASM_SRC);
-
-    /* Write line to a new asm file */
-    ret = (fprintf(fp, "%s\n", line) >= 0);
-    fclose(fp);
-    if (ret == false) {
-        ERF("Error writing assembly to temp assembly file: %s, "
-            "check permissions.", ASM_SRC);
-    }
-
-    /* Assemble */
-    fp = popen(ASM_CMD, "r");
-
-    /* If popen error, gracefully return */
-    if (!fp)
-      return true;
-
-    /* Capture any errors: bound this by 10 iterations,
-     * that should be enough to report an error of sizeof(errbuf)*10.
-     */
-    for (int i=0; i<10; ++i) {
-        char *msg = fgets(errbuf, sizeof(errbuf), fp);
-        if (msg)
-          ERR("%s", trim_newline(errbuf));
-        if (!msg || feof(fp) || ferror(fp))
-          break;
-    }
-
-    pclose(fp);
-
-    /* We might have generated bad assembly.
-     * 1) The user should get the error output from the assembler.
-     * 2) If there was an error, then the next call will fail.
-     *    Just ignore that error, and return false.
-     */
-    return read_elf_text_section(ASM_OBJ, ctx);
-}
-
-#if 0
-static uintptr_t read_text(pid_t pid, uintptr_t addr)
-{
-    uintptr_t data;
-    uintptr_t text = ptrace(PTRACE_PEEKTEXT, pid, addr, &data);
-    return text;
-}
-#endif
 
 static void execute(pid_t pid, const ctx_t *ctx)
 {
@@ -347,45 +162,39 @@ int main(int argc, char **argv)
     char *line;
     pid_t engine;
     ctx_t ctx;
-    _Bool use_keystone, asm_result;
+    assembler_h handle;
+    assembler_e assembler_type;
+    const assembler_t *assembler;
 
     /* Setup defaults for command line args */
-    use_keystone = false;
+    assembler_type = ASSEMBLER_GNU_AS_X8664;
     while ((opt = getopt(argc, argv, "hkv")) != -1) {
         switch (opt) {
         case 'h': usage(argv[0]);   exit(EXIT_SUCCESS);
         case 'v': asrepl_version(); exit(EXIT_SUCCESS);
 #ifdef USE_KEYSTONE
-        case 'k': use_keystone = true; break;
+        case 'k': assembler_type = ASSEMBLER_KEYSTONE; break;
 #endif
         default: break;
         }
     }
 
-#ifdef USE_KEYSTONE
-    /* Setup Keystone instance */
-    if (use_keystone) {
-        ks_engine *ks;
-        ks_err err;
-        err = ks_open(ARCH,MODE,&ks);
-        if(err != KS_ERR_OK){
-            ERR("Failed to initialize Keystone library: ks_open()");
-            exit(EXIT_FAILURE);
-        }
-    }
-#elif !defined(__x86_64__)
-    /* We only support gnu as 64bit if keystone is not supplied. */
-    ERR("Sorry, %s only operates on x86-64 architectures.", NAME);
-    exit(EXIT_FAILURE);
+#ifndef __x86_64__
+    ERF("Sorry, %s only operates on x86-64 architectures.", NAME);
 #endif
 
-    if ((engine = init_engine()) == 0) {
-        ERR("Error starting engine process, terminating now.");
-        exit(EXIT_FAILURE);
-    }
+    /* Choose and initialize the assembler */
+    assembler = assembler_find(assembler_type);
+    if (!assembler || assembler->init(&handle) == false)
+      ERF("Error initializing an assembler.");
+
+    /* Initialize the engine */
+    if ((engine = init_engine()) == 0)
+      ERF("Error starting engine process, terminating now.");
 
     /* Engine has started, now query user for asm code */
     while ((line = readline(PROMPT))) {
+        _Bool asm_result;
 
         /* Commands are optional, any commands (success or fail) should
          * not terminate, go back to readline, and get more data.
@@ -395,13 +204,7 @@ int main(int argc, char **argv)
           continue;
 
         /* Do the real work */
-        asm_result = false;
-#ifdef USE_KEYSTONE
-        if (use_keystone)
-          asm_result = keystone_assemble(line, ks, &ctx);
-#endif
-        if (!use_keystone)
-          asm_result = assemble(line, &ctx);
+        asm_result = assembler->assemble(handle, line, &ctx);
 
         /* The assembly was generated correctly, execute it. */
         if (asm_result == true) {
@@ -410,10 +213,6 @@ int main(int argc, char **argv)
         }
         add_history(line);
     }
-
-#ifdef USE_KEYSTONE
-    ks_close(ks);
-#endif
 
     return 0;
 }

@@ -32,7 +32,10 @@
  ******************************************************************************/
 #ifndef __ASREPL_H
 #define __ASREPL_H
+#include <elf.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/user.h>
 
@@ -59,6 +62,27 @@
         fprintf(stderr, TAG " error" PROMPTC " " _msg  "\n", ##__VA_ARGS__); \
         exit(EXIT_FAILURE);                                                  \
     } while (0)
+
+/* Ptrace operates on word size thingies */
+typedef unsigned long word_t;
+
+/* Size agnostic ELF section header */
+typedef struct _shdr_t
+{
+    _Bool is_64bit;
+    union {
+        Elf64_Shdr ver64;
+        Elf32_Shdr ver32;
+    } u;
+} shdr_t;
+#define SHDR(_shdr, _field) \
+    ((_shdr).is_64bit ? (_shdr).u.ver64._field : (_shdr).u.ver32._field)
+
+typedef struct _context_t
+{
+    uint8_t *text;
+    size_t   length; /* Bytes of .text */
+} ctx_t;
 
 extern void asrepl_version(void);
 extern uintptr_t asrepl_get_pc(pid_t pid);
