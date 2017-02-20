@@ -18,15 +18,13 @@ typedef enum
 /* Assembler representation */
 typedef struct _assembler_t
 {
-    const char  *flags;
+    const char *flags;
 
     /* True: success, False: failure */
     _Bool (*init)(assembler_h *handle);    /* Initialize assembler       */
     _Bool (*shutdown)(assembler_h handle); /* Stop and cleanup assembler */
 
-    /* 'line' is the user-supplied assembly string.
-     * 'user' caller supplied data blob... do what you wish.
-     */
+    /* 'line' is the user-supplied assembly string. */
     _Bool (*assemble)(assembler_h handle, const char *line, ctx_t *ctx);
 } assembler_t;
 

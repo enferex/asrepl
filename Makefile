@@ -3,7 +3,7 @@ CC=gcc
 CFLAGS=-g3 -O0 -Wall -DASSEMBLER=\"$(AS)\"
 SRCS=main.c asrepl_commands.c asrepl.c assembler.c
 OBJS=$(SRCS:.c=.o)
-LDFLAGS=-lreadline -lkeystone 
+LDFLAGS=-lreadline #-lkeystone 
 
 all: $(APP)
 
