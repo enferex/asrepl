@@ -50,6 +50,7 @@ struct {
     _Bool       hidden;
 } static const repl_commands[] = {
     {"regs",    "Dump registers.",           cmd_dump,    false},
+    {"reg",     "Dump registers.",           cmd_dump,    true},
     {"help",    "This help message.",        cmd_help,    false},
     {"h",       "This help message.",        cmd_help,    true},
     {"?",       "This help message.",        cmd_help,    true},
