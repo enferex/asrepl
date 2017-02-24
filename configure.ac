@@ -12,6 +12,7 @@ AC_PROG_CC
 
 # Checks for libraries.
 AC_CHECK_LIB([readline], [readline])
+AC_CHECK_LIB([keystone], [ks_asm])
 
 # Checks for header files.
 AC_CHECK_HEADERS([stdint.h stdlib.h string.h unistd.h])
