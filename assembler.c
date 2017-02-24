@@ -163,7 +163,7 @@ static _Bool keystone_shutdown(assembler_h handle)
       return false;
 
     ks = (ks_engine *)handle;
-    ks_close(hs);
+    ks_close(ks);
     return true;
 }
 
@@ -177,7 +177,7 @@ static _Bool keystone_assemble(
 {
     size_t count, size;
     unsigned char *encode;
-    ks_engine *ks = (ks_engine)handle;
+    ks_engine *ks = (ks_engine *)handle;
 
     if (!ks)
       ERF("Invalid Keystone handle.");
