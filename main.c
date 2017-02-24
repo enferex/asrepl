@@ -206,12 +206,12 @@ int main(int argc, char **argv)
 
         /* Do the real work */
         asm_result = assembler->assemble(handle, line, &ctx);
-
+        
         /* The assembly was generated correctly, execute it. */
-        if (asm_result == true) {
-            execute(engine, &ctx);
-            cleanup(&ctx);
-        }
+        if (asm_result == true)
+          execute(engine, &ctx);
+
+        cleanup(&ctx);
         add_history(line);
     }
 

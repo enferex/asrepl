@@ -182,14 +182,16 @@ static _Bool keystone_assemble(
     if (!ks)
       ERF("Invalid Keystone handle.");
 
-    if (ks_asm(ks, line, 0, &encode, &size, &count) != KS_ERR_OK)
-      ERF("Not a valid instruction.");
+    if (ks_asm(ks, line, 0, &encode, &size, &count) != KS_ERR_OK) {
+        ERR("Invalid assembly.");
+        return false;
+    }
 
     /* Copy the bytes into the context */
     if (!(ctx->text = malloc(size)))
       ERF("Error allocating data for .text.");
 
-    for (size_t i = 0; i < size; i++){
+    for (size_t i=0; i<size; ++i)
       ctx->text[i] = encode[i];
 
     ctx->length = size;
