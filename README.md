@@ -22,8 +22,11 @@ asrepl works by the following steps:
 
 Building
 --------
-Run `make` from the directory.  Once you jump into the REPL issue a "?" to
-get a list of commands.
+1. Run `./configure` to generate a Makefile and autodetect a build
+   configuration based on libraries available on your system.
+2. Run `make` from the directory.  Once you jump into the REPL issue a "?" to
+   get a list of commands.
+3. The resulting application is called `asrepl`, so have at it!
 
 Notes
 -----

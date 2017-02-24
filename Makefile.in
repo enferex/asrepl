@@ -1,0 +1,21 @@
+APP       = asrepl
+CC        = @CC@
+CFLAGS    = @CFLAGS@ -Wall -DASSEMBLER=\"$(AS)\"
+LDFLAGS   = @LIBS@ @LDFLAGS@
+SRCS      = main.c asrepl_commands.c asrepl.c
+OBJS      = $(SRCS:.c=.o)
+
+all: $(APP)
+
+.PHONY: sanity
+sanity:
+ifeq ($(AS),)
+$(error Could not locate assembler, please set AS manually in the Makefile.)
+endif
+
+$(APP): sanity $(OBJS)
+	$(CC) $(OBJS) -o $@ $(LDFLAGS)
+
+.PHONY: clean
+clean:
+	$(RM) $(OBJS) $(APP) config.{log,status}
