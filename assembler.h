@@ -1,6 +1,7 @@
 #ifndef __ASSEMBLER_H
 #define __ASSEMBLER_H
 #include <stdbool.h>
+#include "config.h"
 
 /* Some assemblers have a handle (e.g., api/library based assemblers) */
 typedef void *assembler_h;
@@ -9,7 +10,7 @@ typedef enum
 {
     ASSEMBLER_INVALID = 0,
     ASSEMBLER_GNU_AS_X8664,
-#ifdef USE_KEYSTONE
+#ifdef HAVE_LIBKEYSTONE
     ASSEMBLER_KEYSTONE,
 #endif
     ASSEMBLER_MAX

@@ -4,6 +4,7 @@
 #include <string.h>
 #include "asrepl.h"
 #include "assembler.h"
+#include "config.h"
 
 /* Temporary file names for assembly generation */
 #define ASM_OBJ   "./.asrepl.temp.o"
@@ -12,11 +13,11 @@
 #define ASM_FLAGS "--64"
 #define ASM_CMD   ASSEMBLER " " ASM_SRC " " ASM_FLAGS " -o " ASM_OBJ " " REDIR
 
-#ifdef USE_KEYSTONE
+#ifdef HAVE_LIBKEYSTONE
 #include <keystone/keystone.h>
 #define ARCH KS_ARCH_X86
 #define MODE KS_MODE_64
-#endif /* USE_KEYSTONE */
+#endif /* HAVE_LIBKEYSTONE */
 
 /* Only to be called from assemble(), where
  * the str is to be at most sizeof(errbuf) and null terminated.
@@ -135,7 +136,7 @@ static _Bool gnu_assemble(assembler_h handle, const char *line, ctx_t *ctx)
     return read_elf_text_section(ASM_OBJ, ctx);
 }
 
-#ifdef USE_KEYSTONE
+#ifdef HAVE_LIBKEYSTONE
 static _Bool keystone_init(assembler_h *handle)
 {
     ks_engine *ks;
@@ -151,9 +152,9 @@ static _Bool keystone_init(assembler_h *handle)
     *handle = (assembler_h *)ks;
     return true;
 }
-#endif /* USE_KEYSTONE */
+#endif /* HAVE_LIBKEYSTONE */
 
-#ifdef USE_KEYSTONE
+#ifdef HAVE_LIBKEYSTONE
 static _Bool keystone_shutdown(assembler_h handle)
 {
     ks_engine *ks = (ks_engine *)handle;
@@ -166,9 +167,9 @@ static _Bool keystone_shutdown(assembler_h handle)
     return true;
 }
 
-#endif /* USE_KEYSTONE */
+#endif /* HAVE_LIBKEYSTONE */
 
-#ifdef USE_KEYSTONE
+#ifdef HAVE_LIBKEYSTONE
 static _Bool keystone_assemble(
     assembler_h  handle,
     const char  *line,
@@ -195,7 +196,7 @@ static _Bool keystone_assemble(
     ks_free(encode);
     return true;
 }
-#endif /* USE_KEYSTONE */
+#endif /* HAVE_LIBKEYSTONE */
 
 /* Always true predicates */
 static _Bool yes_init(assembler_h     *unused) { return true; }
@@ -206,7 +207,7 @@ static const assembler_t assemblers[] =
 {
     [ASSEMBLER_GNU_AS_X8664] = {"--64", yes_init, yes_shutdown, gnu_assemble},
 
-#ifdef USE_KEYSTONE
+#ifdef HAVE_LIBKEYSTONE
     [ASSEMBLER_KEYSTONE] = {NULL, keystone_init,
                             keystone_shutdown, keystone_assemble},
 #endif
