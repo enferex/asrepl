@@ -38,40 +38,63 @@
 #include "asrepl.h"
 #include "asrepl_commands.h"
 
+/* REPL commands beginning with a leading '/' are considered prefix,
+ * else they are not prefixed.  The reason for the two command types
+ * is to increase command-lookup speed, while also eliminating any
+ * potential asm instruction collisions.
+ */
+#define IS_NOT_PREFIXED(_str) ((_str)[0] != '/')
+
+/* Utility */
+#define ARRAY_LENGTH(_a) (sizeof((_a)) / sizeof((_a)[0]))
+
 /* REPL Commands */
 static void cmd_help(const void    *unused);
 static void cmd_exit(const void    *unused);
 static void cmd_version(const void *unused);
 static void cmd_dump(const void    *pid);
-struct {
+typedef struct _repl_command {
     const char *command;
     const char *description;
     void (*fn)(const void *);
     _Bool       hidden;
-} static const repl_commands[] = {
-    {"regs",    "Dump registers.",           cmd_dump,    false},
-    {"reg",     "Dump registers.",           cmd_dump,    true},
-    {"help",    "This help message.",        cmd_help,    false},
-    {"h",       "This help message.",        cmd_help,    true},
-    {"?",       "This help message.",        cmd_help,    true},
-    {"wtf",     "This help message.",        cmd_help,    true},
-    {"q",       "Exit",                      cmd_exit,    true},
-    {"x",       "Exit",                      cmd_exit,    true},
-    {"exit",    "Exit",                      cmd_exit,    false},
-    {"quit",    "Exit",                      cmd_exit,    true},
-    {"ver",     "About/Version information", cmd_version, false},
-    {"version", "About/Version information", cmd_version, true},
-    {"about",   "About/Version information", cmd_version, true},
+} repl_command_t;
+
+static const repl_command_t nonprefixed_cmds[] = {
+    {"q",  "Exit",               cmd_exit, true},
+    {"x",  "Exit",               cmd_exit, true},
+    {"?",  "This help message.", cmd_help, true}
+};
+
+static const repl_command_t prefixed_cmds[] = {
+    {"/regs",    "Dump registers.",           cmd_dump,    false},
+    {"/reg",     "Dump registers.",           cmd_dump,    true},
+    {"/help",    "This help message.",        cmd_help,    false},
+    {"/h",       "This help message.",        cmd_help,    true},
+    {"/wtf",     "This help message.",        cmd_help,    true},
+    {"/exit",    "Exit",                      cmd_exit,    false},
+    {"/quit",    "Exit",                      cmd_exit,    true},
+    {"/ver",     "About/Version information", cmd_version, false},
+    {"/version", "About/Version information", cmd_version, true},
+    {"/about",   "About/Version information", cmd_version, true},
 };
 
 static void cmd_help(const void *unused)
 {
-    int i;
-
     PRINT("Commands:");
-    for (i=0; i<sizeof(repl_commands)/sizeof(repl_commands[0]); ++i)
-      if (!repl_commands[i].hidden)
-        PRINT("%8s: %s",repl_commands[i].command,repl_commands[i].description);
+
+    for (int i=0; i<ARRAY_LENGTH(nonprefixed_cmds); ++i)
+      if (!nonprefixed_cmds[i].hidden)
+        PRINT("%8s: %s",
+              nonprefixed_cmds[i].command,
+              nonprefixed_cmds[i].description);
+
+    for (int i=0; i<ARRAY_LENGTH(prefixed_cmds); ++i)
+      if (!prefixed_cmds[i].hidden)
+        PRINT("%8s: %s",
+              prefixed_cmds[i].command,
+              prefixed_cmds[i].description);
+
 }
 
 static void cmd_exit(const void *unused)
@@ -94,13 +117,26 @@ static void cmd_dump(const void *pid_ptr)
 
 cmd_status_e asrepl_cmd_process(const char *data, pid_t pid)
 {
-    int i;
+    if (!data)
+      return CMD_NOT_A_COMMAND;
 
-    for (i=0; i<sizeof(repl_commands)/sizeof(repl_commands[0]); ++i) {
-        const char *cmd = repl_commands[i].command;
-        if (strncmp(data, cmd, strlen(cmd)) == 0) {
-            repl_commands[i].fn((const void *)&pid);
-            return CMD_HANDLED;
+    else if (IS_NOT_PREFIXED(data)) {
+        for (int i=0; i<ARRAY_LENGTH(nonprefixed_cmds); ++i) {
+            const char *cmd = nonprefixed_cmds[i].command;
+            if (strncmp(data, cmd, strlen(cmd)) == 0) {
+                nonprefixed_cmds[i].fn((const void *)&pid);
+                return CMD_HANDLED;
+           }
+        }
+    }
+
+    else {  /* Else: prefixed */
+        for (int i=0; i<ARRAY_LENGTH(prefixed_cmds); ++i) {
+            const char *cmd = prefixed_cmds[i].command;
+            if (strncmp(data, cmd, strlen(cmd)) == 0) {
+                prefixed_cmds[i].fn((const void *)&pid);
+                return CMD_HANDLED;
+           }
         }
     }
 
