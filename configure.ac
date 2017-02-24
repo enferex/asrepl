@@ -2,6 +2,7 @@ AC_PREREQ([2.69])
 AC_INIT([asrepl], [0.1])
 AC_CONFIG_SRCDIR([asrepl.c])
 AC_CONFIG_FILES([Makefile])
+AC_CONFIG_HEADER([config.h])
 AC_LANG_C
 
 # Checks for programs.

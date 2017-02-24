@@ -46,6 +46,7 @@
 #include "asrepl.h"
 #include "asrepl_commands.h"
 #include "assembler.h"
+#include "config.h"
 
 static pid_t init_engine(void)
 {
@@ -146,7 +147,7 @@ static void cleanup(ctx_t *ctx)
 static void usage(const char *execname)
 {
     printf("Usage: %s [-h] [-v] "
-#ifdef USE_KEYSTONE
+#ifdef HAVE_LIBKEYSTONE
            "[-k]"
 #endif
            "\n"
@@ -172,7 +173,7 @@ int main(int argc, char **argv)
         switch (opt) {
         case 'h': usage(argv[0]);   exit(EXIT_SUCCESS);
         case 'v': asrepl_version(); exit(EXIT_SUCCESS);
-#ifdef USE_KEYSTONE
+#ifdef HAVE_LIBKEYSTONE
         case 'k': assembler_type = ASSEMBLER_KEYSTONE; break;
 #endif
         default: break;
