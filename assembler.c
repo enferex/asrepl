@@ -205,7 +205,7 @@ static _Bool yes_init(assembler_h     *unused) { return true; }
 static _Bool yes_shutdown(assembler_h  unused) { return true; }
 
 /* Array of all assemblers that we support */
-static const assembler_t assemblers[] = 
+static const assembler_t assemblers[] =
 {
     [ASSEMBLER_GNU_AS_X8664] = {"--64", yes_init, yes_shutdown, gnu_assemble},
 

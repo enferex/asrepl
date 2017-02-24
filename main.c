@@ -152,8 +152,11 @@ static void usage(const char *execname)
 #endif
            "\n"
            " -h: This help message.\n"
-           " -v: Version information.\n",
-           execname);
+           " -v: Version information.\n"
+#ifdef HAVE_LIBKEYSTONE
+           " -k: Use the Keystone assembler.\n"
+#endif
+           , execname);
 
 }
 
