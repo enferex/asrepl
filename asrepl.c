@@ -49,7 +49,7 @@ asrepl_t *asrepl_init(assembler_e assembler_type)
       ERF("Error allocating memory for the asrepl handle.");
 
     /* Choose and initialize the assembler */
-    if ((asr->assembler = assembler_init(assembler_type)))
+    if (!(asr->assembler = assembler_init(assembler_type)))
       ERF("Error locating an assembler to use.");
 
     return asr;
