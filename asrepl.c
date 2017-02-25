@@ -30,6 +30,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/ptrace.h>
@@ -42,17 +43,21 @@
 
 asrepl_t *asrepl_init(assembler_e assembler_type)
 {
-    asrepl_t *as = calloc(1, sizeof(asreplt_t));
+    asrepl_t *asr = calloc(1, sizeof(asrepl_t));
 
-    if (!as)
+    if (!asr)
       ERF("Error allocating memory for the asrepl handle.");
 
     /* Choose and initialize the assembler */
-    as->assembler = assembler_find(assembler_type);
-    if (!assembler || assembler->init(&handle) == false)
-      ERF("Error initializing an assembler.");
+    if ((asr->assembler = assembler_init(assembler_type)))
+      ERF("Error locating an assembler to use.");
 
-    return as;
+    return asr;
+}
+
+ctx_t *asrepl_new_ctx(void)
+{
+    return calloc(1, sizeof(ctx_t));
 }
 
 void asrepl_version(void)
@@ -106,4 +111,11 @@ void asrepl_dump_registers(pid_t pid)
     REG64(&regs, fs_base);
     REG64(&regs, gs_base);
 /*    REG64(&regs, orig_rax); */
+}
+
+/* Call the assembler to assemble this */
+_Bool asrepl_assemble(asrepl_t *asr, const char *line, ctx_t *ctx)
+{
+    assert(asr);
+    return assembler_assemble(asr->assembler, line, ctx);
 }

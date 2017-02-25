@@ -33,16 +33,6 @@ typedef struct _assembler_desc_t
     _Bool (*assemble)(assembler_t *as, const char *line, ctx_t *ctx);
 } assembler_desc_t;
 
-/* Array of all assemblers that we support */
-static const assembler_desc_t assemblers[] =
-{
-    [ASSEMBLER_GNU_AS_X8664] = {"--64", yes_init, yes_shutdown, gnu_assemble},
-#ifdef HAVE_LIBKEYSTONE
-    [ASSEMBLER_KEYSTONE] = {NULL, keystone_init,
-                            keystone_shutdown, keystone_assemble},
-#endif
-};
-
 /* Only to be called from assemble(), where
  * the str is to be at most sizeof(errbuf) and null terminated.
  */
@@ -173,7 +163,7 @@ static _Bool keystone_init(assembler_t *as)
     if (!as->handle)
       return false;
 
-    *as->handle = (assembler_h *)ks;
+    as->handle = (assembler_h)ks;
     return true;
 }
 #endif /* HAVE_LIBKEYSTONE */
@@ -224,9 +214,19 @@ static _Bool keystone_assemble(
 }
 #endif /* HAVE_LIBKEYSTONE */
 
-/* Always true predicates */
+/* Always true predicates (for convenience) */
 static _Bool yes_init(assembler_t     *unused) { return true; }
-static _Bool yes_shutdown(assembler_t  unused) { return true; }
+static _Bool yes_shutdown(assembler_t *unused) { return true; }
+
+/* Array of all assemblers that we support */
+static const assembler_desc_t assemblers[] =
+{
+    [ASSEMBLER_GNU_AS_X8664] = {"--64", yes_init, yes_shutdown, gnu_assemble},
+#ifdef HAVE_LIBKEYSTONE
+    [ASSEMBLER_KEYSTONE] = {NULL, keystone_init,
+                            keystone_shutdown, keystone_assemble},
+#endif
+};
 
 assembler_t *assembler_init(assembler_e type)
 {
@@ -240,13 +240,16 @@ assembler_t *assembler_init(assembler_e type)
 
     as->type = type;
     as->desc = &assemblers[type];
+    
+    /* Initialize the assembler */
+    if (as->desc->init(as) == false)
+      ERF("Error initializing assembler.");
+
     return as;
 }
 
-/* Call the assembler to assemble this */
-_Bool asrepl_assemble(arepl_t *asr, const char *line, ctx_t *ctx)
+_Bool assembler_assemble(assembler_t *as, const char *line, ctx_t *ctx)
 {
-    assert(asr);
-    assert(asr->assembler.desc);
-    return asr->assembler.desc.assemble(as, line, ctx);
+    assert(as && as->desc);
+    return as->desc->assemble(as, line, ctx);
 }

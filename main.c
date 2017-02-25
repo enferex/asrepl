@@ -31,6 +31,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
+#include <assert.h>
 #include <errno.h>
 #include <signal.h>
 #include <stdbool.h>
@@ -48,15 +49,20 @@
 #include "assembler.h"
 #include "config.h"
 
-static pid_t init_engine(void)
+/* Returns 'true' on success and 'false' otherwise. */
+static _Bool init_engine(asrepl_t *asr)
 {
+    assert(asr);
     const pid_t pid = fork();
+    
+    asr->engine_pid = pid;
 
     if (pid > 0) {
         /* Parent with child's pid.  Wait for the child. */
         int status;
         const pid_t ret = waitpid(pid, &status, __WALL);
-        return (pid == ret && WIFSTOPPED(status)) ? pid : 0;
+        return (pid == ret && WIFSTOPPED(status));
+
     }
     else if (pid == 0) {
         /* Child (tracee) */
@@ -96,7 +102,7 @@ static pid_t init_engine(void)
     else
       ERR("Error fork()ing child process: %s", strerror(errno));
 
-    return 0; /* Error */
+    return false; /* Error */
 }
 
 static void execute(pid_t pid, const ctx_t *ctx)
@@ -164,8 +170,6 @@ int main(int argc, char **argv)
 {
     int opt;
     char *line;
-    pid_t engine;
-    ctx_t ctx;
     assembler_e assembler_type;
     asrepl_t *asr;
 
@@ -190,28 +194,31 @@ int main(int argc, char **argv)
       ERF("Error initializing a new asrepl instance.");
 
     /* Initialize the engine */
-    if ((engine = init_engine()) == 0)
+    if (init_engine(asr) == false)
       ERF("Error starting engine process, terminating now.");
 
     /* Engine has started, now query user for asm code */
     while ((line = readline(PROMPT))) {
         _Bool asm_result;
+        ctx_t *ctx;
 
         /* Commands are optional, any commands (success or fail) should
          * not terminate, go back to readline, and get more data.
          */
-        const cmd_status_e cmd_status = asrepl_cmd_process(asr, line, engine);
+        const cmd_status_e cmd_status = asrepl_cmd_process(asr, line);
         if (cmd_status == CMD_ERROR || cmd_status == CMD_HANDLED)
           continue;
 
         /* Do the real work */
-        asm_result = assemble(asr, line, &ctx);
+        if (!(ctx = asrepl_new_ctx()))
+          ERF("Error allocating a new context.");
+        asm_result = asrepl_assemble(asr, line, ctx);
         
         /* The assembly was generated correctly, execute it. */
         if (asm_result == true)
-          execute(engine, &ctx);
+          execute(asr->engine_pid, ctx);
 
-        cleanup(&ctx);
+        cleanup(ctx);
         add_history(line);
     }
 

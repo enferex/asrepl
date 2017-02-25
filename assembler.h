@@ -1,7 +1,6 @@
 #ifndef __ASSEMBLER_H
 #define __ASSEMBLER_H
 #include <stdbool.h>
-#include "asrepl.h"
 #include "config.h"
 
 typedef enum
@@ -14,7 +13,7 @@ typedef enum
     ASSEMBLER_MAX
 } assembler_e;
 
-/* Handle's are just opaque pointers and specific (or ignored) by the assembler
+/* Handles are just opaque pointers and specific (or ignored) by the assembler
  * implementation.
  */
 typedef void *assembler_h;
@@ -29,10 +28,13 @@ typedef struct _assembler_t
     assembler_h handle;
 
     /* Description */
-    const struct assembler_desc_t *desc;
+    const struct _assembler_desc_t *desc;
 } assembler_t;
 
 /* Return an assembler for 'type', or NULL on error. */
 extern assembler_t *assembler_init(assembler_e type);
+
+/* Return 'true' on success and 'false' otherwise. */
+extern _Bool assembler_assemble(assembler_t *as, const char *line, ctx_t *ctx);
 
 #endif /* __ASSEMBLER_H */

@@ -101,7 +101,7 @@ typedef struct _macro_t
 /* State object, one for each instance of asreplt... probably only ever one. */
 typedef struct _asrepl_t
 {
-    assembler_t  assembler;
+    assembler_t *assembler;
     macro_t     *macros;
     pid_t        engine_pid;
 } asrepl_t;
@@ -114,11 +114,17 @@ extern void asrepl_get_registers(pid_t pid, struct user_regs_struct *regs);
 /* Print register values to stdout */
 extern void asrepl_dump_registers(pid_t pid);
 
+/* Return new context to represent a new blob of machine instructions. */
+extern ctx_t *asrepl_new_ctx(void);
+
 /* Assemble the line into machine instructions. 'ctx' will contain
  * the newly assembled machine instructions upon success.
  *
  * Returns 'true' on success and 'false' otherwise.
  */
-extern _Bool asrepl_assemble(asrepl_t *as, const char *line, ctx_t *ctx);
+extern _Bool asrepl_assemble(
+    asrepl_t   *as,
+    const char *line,
+    ctx_t      *ctx);
 
 #endif /* __ASREPL_H */

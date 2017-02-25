@@ -58,7 +58,7 @@ typedef struct _repl_cmd_t {
 
 /* REPL Command Callbacks */
 #define DECL_CALLBACK(_name) \
-    static void cmd_#_name(asrepl_t *a, const repl_cmd_t *c, const void *d)
+    static void cmd_ ##_name (asrepl_t *a, const repl_cmd_t *c, const void *d)
 DECL_CALLBACK(dump);
 DECL_CALLBACK(exit);
 DECL_CALLBACK(help);
@@ -137,9 +137,6 @@ static void cmd_version(asrepl_t *asr, const repl_cmd_t *cmd, const void *none)
 
 static void cmd_dump(asrepl_t *asr, const repl_cmd_t *cmd, const void *none)
 {
-    if (pid_ptr == NULL)
-      return;
-
     asrepl_dump_registers(asr->engine_pid);
 }
 
@@ -152,7 +149,7 @@ cmd_status_e asrepl_cmd_process(asrepl_t *asrepl, const char *data)
         for (int i=0; i<ARRAY_LENGTH(nonprefixed_cmds); ++i) {
             const repl_cmd_t *cmd = &nonprefixed_cmds[i];
             if (strncmp(data, cmd->command, strlen(cmd->command)) == 0) {
-                nonprefixed_cmds[i].fn(cmd, (const void *)asrepl);
+                nonprefixed_cmds[i].fn(asrepl, cmd, NULL);
                 return CMD_HANDLED;
            }
         }
@@ -162,7 +159,7 @@ cmd_status_e asrepl_cmd_process(asrepl_t *asrepl, const char *data)
         for (int i=0; i<ARRAY_LENGTH(prefixed_cmds); ++i) {
             const repl_cmd_t *cmd = &prefixed_cmds[i];
             if (strncmp(data, cmd->command, strlen(cmd->command)) == 0) {
-                prefixed_cmds[i].fn(cmd, (const void *)asrepl);
+                prefixed_cmds[i].fn(asrepl, cmd, NULL);
                 return CMD_HANDLED;
            }
         }

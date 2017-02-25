@@ -49,9 +49,6 @@ typedef enum _cmd_status_e
  *
  * 'pid': pid of the process that we are executing user suppled asm on. 
  */
-extern cmd_status_e asrepl_cmd_process(
-        asrepl_t   *asrepl,
-        const char *line,
-        pid_t       pid);
+extern cmd_status_e asrepl_cmd_process(asrepl_t *asrepl, const char *line);
 
 #endif /* __ASREPL_COMMANDS_H */
