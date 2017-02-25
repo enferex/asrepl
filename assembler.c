@@ -52,6 +52,19 @@
 #define MODE KS_MODE_64
 #endif /* HAVE_LIBKEYSTONE */
 
+/* Size agnostic ELF section header */
+typedef struct _shdr_t
+{
+    _Bool is_64bit;
+    union {
+        Elf64_Shdr ver64;
+        Elf32_Shdr ver32;
+    } u;
+} shdr_t;
+
+#define SHDR(_shdr, _field) \
+    ((_shdr).is_64bit ? (_shdr).u.ver64._field : (_shdr).u.ver32._field)
+
 /* Assembler description. Static data for each assembler supported. */
 typedef struct _assembler_desc_t
 {

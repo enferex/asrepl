@@ -32,13 +32,12 @@
  ******************************************************************************/
 #ifndef __ASREPL_H
 #define __ASREPL_H
-#include <elf.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/user.h>
-#include "assembler.h"
+#include "asrepl_types.h"
 
 #define NAME    "asrepl"
 #define MAJOR   0
@@ -65,46 +64,6 @@
 
 /* Ptrace operates on word size thingies */
 typedef unsigned long word_t;
-
-/* Size agnostic ELF section header */
-typedef struct _shdr_t
-{
-    _Bool is_64bit;
-    union {
-        Elf64_Shdr ver64;
-        Elf32_Shdr ver32;
-    } u;
-} shdr_t;
-#define SHDR(_shdr, _field) \
-    ((_shdr).is_64bit ? (_shdr).u.ver64._field : (_shdr).u.ver32._field)
-
-/* The machine code */
-typedef struct _context_t
-{
-    uint8_t *text;
-    size_t   length; /* Bytes of .text */
-} ctx_t;
-
-typedef struct _ctx_list_t
-{
-    ctx_t              *ctx;
-    struct _ctx_list_t *next;
-} ctx_list_t;
-
-/* Macros are just named lists of contexts (assembled instructions) */
-typedef struct _macro_t
-{
-    const char       *name; /* Set via /def */
-    const ctx_list_t *ctxs;
-} macro_t;
-
-/* State object, one for each instance of asreplt... probably only ever one. */
-typedef struct _asrepl_t
-{
-    assembler_t *assembler;
-    macro_t     *macros;
-    pid_t        engine_pid;
-} asrepl_t;
 
 extern asrepl_t *asrepl_init(assembler_e type);
 extern void asrepl_version(void);
