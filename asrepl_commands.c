@@ -73,6 +73,7 @@ static void cmd_exemacro(
 /* Commands defined */
 static const repl_cmd_t nonprefixed_cmds[] = {
     {"$",  "Defined macro name (see /help).", cmd_exemacro, true},
+    {"r",  "Dump registers.",                 cmd_dump,     true},
     {"q",  "Exit",                            cmd_exit,     true},
     {"x",  "Exit",                            cmd_exit,     true},
     {"?",  "This help message.",              cmd_help,     true}
