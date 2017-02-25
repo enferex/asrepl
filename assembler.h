@@ -1,10 +1,8 @@
 #ifndef __ASSEMBLER_H
 #define __ASSEMBLER_H
 #include <stdbool.h>
+#include "asrepl.h"
 #include "config.h"
-
-/* Some assemblers have a handle (e.g., api/library based assemblers) */
-typedef void *assembler_h;
 
 typedef enum
 {
@@ -16,20 +14,25 @@ typedef enum
     ASSEMBLER_MAX
 } assembler_e;
 
+/* Handle's are just opaque pointers and specific (or ignored) by the assembler
+ * implementation.
+ */
+typedef void *assembler_h;
+
 /* Assembler representation */
+struct _assembler_desc_t;
 typedef struct _assembler_t
 {
-    const char *flags;
+    assembler_e type;
 
-    /* True: success, False: failure */
-    _Bool (*init)(assembler_h *handle);    /* Initialize assembler       */
-    _Bool (*shutdown)(assembler_h handle); /* Stop and cleanup assembler */
+    /* Some assemblers have a handle (e.g., api/library based assemblers) */
+    assembler_h handle;
 
-    /* 'line' is the user-supplied assembly string. */
-    _Bool (*assemble)(assembler_h handle, const char *line, ctx_t *ctx);
+    /* Description */
+    const struct assembler_desc_t *desc;
 } assembler_t;
 
 /* Return an assembler for 'type', or NULL on error. */
-extern const assembler_t *assembler_find(assembler_e type);
+extern assembler_t *assembler_init(assembler_e type);
 
 #endif /* __ASSEMBLER_H */

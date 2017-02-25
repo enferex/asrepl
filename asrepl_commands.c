@@ -48,38 +48,53 @@
 /* Utility */
 #define ARRAY_LENGTH(_a) (sizeof((_a)) / sizeof((_a)[0]))
 
-/* REPL Commands */
-static void cmd_help(const void    *unused);
-static void cmd_exit(const void    *unused);
-static void cmd_version(const void *unused);
-static void cmd_dump(const void    *pid);
-typedef struct _repl_command {
+/* REPL Command */
+typedef struct _repl_cmd_t {
     const char *command;
     const char *description;
-    void (*fn)(const void *);
+    void        (*fn)(asrepl_t *asr, const struct _repl_cmd_t *, const void *);
     _Bool       hidden;
-} repl_command_t;
+} repl_cmd_t;
 
-static const repl_command_t nonprefixed_cmds[] = {
-    {"q",  "Exit",               cmd_exit, true},
-    {"x",  "Exit",               cmd_exit, true},
-    {"?",  "This help message.", cmd_help, true}
+/* REPL Command Callbacks */
+#define DECL_CALLBACK(_name) \
+    static void cmd_#_name(asrepl_t *a, const repl_cmd_t *c, const void *d)
+DECL_CALLBACK(dump);
+DECL_CALLBACK(exit);
+DECL_CALLBACK(help);
+DECL_CALLBACK(version);
+static void cmd_defmacro(
+    asrepl_t *asr, const repl_cmd_t *cmd, const void *line) {}
+static void cmd_endmacro(
+    asrepl_t *asr, const repl_cmd_t *cmd, const void *unused) {}
+static void cmd_exemacro(
+    asrepl_t *asr, const repl_cmd_t *cmd, const void *line) {}
+
+/* Commands defined */
+static const repl_cmd_t nonprefixed_cmds[] = {
+    {"$",  "Defined macro name (see /help).", cmd_exemacro, true},
+    {"q",  "Exit",                            cmd_exit,     true},
+    {"x",  "Exit",                            cmd_exit,     true},
+    {"?",  "This help message.",              cmd_help,     true}
 };
 
-static const repl_command_t prefixed_cmds[] = {
-    {"/regs",    "Dump registers.",           cmd_dump,    false},
-    {"/reg",     "Dump registers.",           cmd_dump,    true},
-    {"/help",    "This help message.",        cmd_help,    false},
-    {"/h",       "This help message.",        cmd_help,    true},
-    {"/wtf",     "This help message.",        cmd_help,    true},
-    {"/exit",    "Exit",                      cmd_exit,    false},
-    {"/quit",    "Exit",                      cmd_exit,    true},
-    {"/ver",     "About/Version information", cmd_version, false},
-    {"/version", "About/Version information", cmd_version, true},
-    {"/about",   "About/Version information", cmd_version, true},
+/* Commands defined */
+static const repl_cmd_t prefixed_cmds[] = {
+    {"/regs",    "Dump registers.",             cmd_dump,     false},
+    {"/reg",     "Dump registers.",             cmd_dump,     true},
+    {"/def",     "Define a macro (see /help).", cmd_defmacro, false},
+    {"/end",     "End a macro.",                cmd_endmacro, false},
+    {"/help",    "This help message.",          cmd_help,     false},
+    {"/h",       "This help message.",          cmd_help,     true},
+    {"/wtf",     "This help message.",          cmd_help,     true},
+    {"/exit",    "Exit",                        cmd_exit,     false},
+    {"/quit",    "Exit",                        cmd_exit,     true},
+    {"/ver",     "About/Version information",   cmd_version,  false},
+    {"/version", "About/Version information",   cmd_version,  true},
+    {"/about",   "About/Version information",   cmd_version,  true},
 };
 
-static void cmd_help(const void *unused)
+static void cmd_help(asrepl_t *asr, const repl_cmd_t *cmd, const void *unused)
 {
     PRINT("Commands:");
 
@@ -95,36 +110,49 @@ static void cmd_help(const void *unused)
               prefixed_cmds[i].command,
               prefixed_cmds[i].description);
 
+    PRINT("\nAdditional Information:");
+    PRINT("/def <name> ");
+    PRINT("  Defines a macro named <name> which represents the list of ");
+    PRINT("  assembly instructions following the /def macro. Each assembly");
+    PRINT("  instruction must begin on its own line. The list is ");
+    PRINT("  terminated once an /end command is issued.  Once defined, a ");
+    PRINT("  macro can be executed as a command: @<name>");
+    PRINT("  Example:");
+    PRINT("    /def macro mymacro");
+    PRINT("    mov $0x2a, %%rax");
+    PRINT("    mov %%rax, %%rbp");
+    PRINT("    /end");
+    PRINT("  This macro can now be executed by issuing @mymacro in the REPL.");
 }
 
-static void cmd_exit(const void *unused)
+static void cmd_exit(asrepl_t *asr, const repl_cmd_t *cmd, const void *none)
 {
     exit(EXIT_SUCCESS);
 }
 
-static void cmd_version(const void *unused)
+static void cmd_version(asrepl_t *asr, const repl_cmd_t *cmd, const void *none)
 {
     asrepl_version();
 }
 
-static void cmd_dump(const void *pid_ptr)
+static void cmd_dump(asrepl_t *asr, const repl_cmd_t *cmd, const void *none)
 {
     if (pid_ptr == NULL)
       return;
 
-    asrepl_dump_registers(*(pid_t *)pid_ptr);
+    asrepl_dump_registers(asr->engine_pid);
 }
 
-cmd_status_e asrepl_cmd_process(const char *data, pid_t pid)
+cmd_status_e asrepl_cmd_process(asrepl_t *asrepl, const char *data)
 {
     if (!data)
       return CMD_NOT_A_COMMAND;
 
     else if (IS_NOT_PREFIXED(data)) {
         for (int i=0; i<ARRAY_LENGTH(nonprefixed_cmds); ++i) {
-            const char *cmd = nonprefixed_cmds[i].command;
-            if (strncmp(data, cmd, strlen(cmd)) == 0) {
-                nonprefixed_cmds[i].fn((const void *)&pid);
+            const repl_cmd_t *cmd = &nonprefixed_cmds[i];
+            if (strncmp(data, cmd->command, strlen(cmd->command)) == 0) {
+                nonprefixed_cmds[i].fn(cmd, (const void *)asrepl);
                 return CMD_HANDLED;
            }
         }
@@ -132,9 +160,9 @@ cmd_status_e asrepl_cmd_process(const char *data, pid_t pid)
 
     else {  /* Else: prefixed */
         for (int i=0; i<ARRAY_LENGTH(prefixed_cmds); ++i) {
-            const char *cmd = prefixed_cmds[i].command;
-            if (strncmp(data, cmd, strlen(cmd)) == 0) {
-                prefixed_cmds[i].fn((const void *)&pid);
+            const repl_cmd_t *cmd = &prefixed_cmds[i];
+            if (strncmp(data, cmd->command, strlen(cmd->command)) == 0) {
+                prefixed_cmds[i].fn(cmd, (const void *)asrepl);
                 return CMD_HANDLED;
            }
         }

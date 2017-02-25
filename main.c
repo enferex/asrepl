@@ -166,14 +166,13 @@ int main(int argc, char **argv)
     char *line;
     pid_t engine;
     ctx_t ctx;
-    assembler_h handle;
     assembler_e assembler_type;
-    const assembler_t *assembler;
+    asrepl_t *asr;
 
     /* Setup defaults for command line args */
     assembler_type = ASSEMBLER_GNU_AS_X8664;
     while ((opt = getopt(argc, argv, "hkv")) != -1) {
-        switch (opt) {
+    switch (opt) {
         case 'h': usage(argv[0]);   exit(EXIT_SUCCESS);
         case 'v': asrepl_version(); exit(EXIT_SUCCESS);
 #ifdef HAVE_LIBKEYSTONE
@@ -186,11 +185,9 @@ int main(int argc, char **argv)
 #ifndef __x86_64__
     ERF("Sorry, %s only operates on x86-64 architectures.", NAME);
 #endif
-
-    /* Choose and initialize the assembler */
-    assembler = assembler_find(assembler_type);
-    if (!assembler || assembler->init(&handle) == false)
-      ERF("Error initializing an assembler.");
+    /* Create a state object for this instance of asrepl */
+    if (!(asr = asrepl_init(assembler_type)))
+      ERF("Error initializing a new asrepl instance.");
 
     /* Initialize the engine */
     if ((engine = init_engine()) == 0)
@@ -203,12 +200,12 @@ int main(int argc, char **argv)
         /* Commands are optional, any commands (success or fail) should
          * not terminate, go back to readline, and get more data.
          */
-        const cmd_status_e cmd_status = asrepl_cmd_process(line, engine);
+        const cmd_status_e cmd_status = asrepl_cmd_process(asr, line, engine);
         if (cmd_status == CMD_ERROR || cmd_status == CMD_HANDLED)
           continue;
 
         /* Do the real work */
-        asm_result = assembler->assemble(handle, line, &ctx);
+        asm_result = assemble(asr, line, &ctx);
         
         /* The assembly was generated correctly, execute it. */
         if (asm_result == true)

@@ -35,9 +35,25 @@
 #include <sys/ptrace.h>
 #include <sys/user.h>
 #include "asrepl.h"
+#include "assembler.h"
 
 #define REG64(_regs, _reg) \
     printf("%s\t 0x%llx\n", #_reg, (_regs)->_reg)
+
+asrepl_t *asrepl_init(assembler_e assembler_type)
+{
+    asrepl_t *as = calloc(1, sizeof(asreplt_t));
+
+    if (!as)
+      ERF("Error allocating memory for the asrepl handle.");
+
+    /* Choose and initialize the assembler */
+    as->assembler = assembler_find(assembler_type);
+    if (!assembler || assembler->init(&handle) == false)
+      ERF("Error initializing an assembler.");
+
+    return as;
+}
 
 void asrepl_version(void)
 {
