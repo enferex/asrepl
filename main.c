@@ -105,45 +105,6 @@ static _Bool init_engine(asrepl_t *asr)
     return false; /* Error */
 }
 
-static void execute(pid_t pid, const ctx_t *ctx)
-{
-    int i, status, n_words;
-    pid_t ret;
-    uint8_t *insns;
-    uintptr_t orig_pc, pc;
-    struct user_regs_struct regs;
-
-    if (ctx->text == NULL)
-      return; /* Non-fatal error */
-
-    /* We will restore the pc after we single step and gather registers */
-    orig_pc = asrepl_get_pc(pid);
-
-    /* POKETEXT operates on word size units (round up) */
-    pc = orig_pc;
-    insns = ctx->text;
-    n_words = (ctx->length / sizeof(word_t));
-    if (ctx->length % sizeof(word_t))
-      ++n_words;
-    for (i=0; i<n_words; ++i) {
-        word_t word = *(word_t *)insns;
-        ptrace(PTRACE_POKETEXT, pid, (void *)pc, (void *)word);
-        pc    += sizeof(word_t);
-        insns += sizeof(word_t);
-    }
-
-    /* Now that data is loaded at the PC of the engine, single step one insn */
-    ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL);
-    ret = waitpid(pid, &status, __WALL);
-    if (ret != 0 && !WIFSTOPPED(status))
-      ERF("Error waiting for engine to single step\n");
-
-    /* Now that we have executed the instruction, restore the pc */
-    asrepl_get_registers(pid, &regs);
-    regs.rip = orig_pc;
-    ptrace(PTRACE_SETREGS, pid, NULL, &regs);
-}
-
 static void usage(const char *execname)
 {
     printf("Usage: %s [-h] [-v] "
@@ -210,7 +171,7 @@ int main(int argc, char **argv)
         
         /* The assembly was generated correctly, execute it. */
         if (asm_result == true)
-          execute(asr->engine_pid, ctx);
+          asrepl_execute(asr, ctx);
 
         /* If we are in macro mode, and assembled successful, keep the ctx */
         if (asr->mode == MODE_MACRO && asm_result == true)

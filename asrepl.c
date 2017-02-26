@@ -36,6 +36,7 @@
 #include <string.h>
 #include <sys/ptrace.h>
 #include <sys/user.h>
+#include <sys/wait.h>
 #include "asrepl.h"
 #include "assembler.h"
 
@@ -141,6 +142,48 @@ _Bool asrepl_assemble(asrepl_t *asr, const char *line, ctx_t *ctx)
 {
     assert(asr);
     return assembler_assemble(asr->assembler, line, ctx);
+}
+
+/* Execute some ctx data. */
+void asrepl_execute(asrepl_t *asr, const ctx_t *ctx)
+{
+    int i, status, n_words;
+    pid_t ret;
+    uint8_t *insns;
+    uintptr_t orig_pc, pc;
+    struct user_regs_struct regs;
+
+    assert(asr);
+
+    if (ctx->text == NULL)
+      return; /* Non-fatal error */
+
+    /* We will restore the pc after we single step and gather registers */
+    orig_pc = asrepl_get_pc(asr->engine_pid);
+
+    /* POKETEXT operates on word size units (round up) */
+    pc = orig_pc;
+    insns = ctx->text;
+    n_words = (ctx->length / sizeof(word_t));
+    if (ctx->length % sizeof(word_t))
+      ++n_words;
+    for (i=0; i<n_words; ++i) {
+        word_t word = *(word_t *)insns;
+        ptrace(PTRACE_POKETEXT, asr->engine_pid, (void *)pc, (void *)word);
+        pc    += sizeof(word_t);
+        insns += sizeof(word_t);
+    }
+
+    /* Now that data is loaded at the PC of the engine, single step one insn */
+    ptrace(PTRACE_SINGLESTEP, asr->engine_pid, NULL, NULL);
+    ret = waitpid(asr->engine_pid, &status, __WALL);
+    if (ret != 0 && !WIFSTOPPED(status))
+      ERF("Error waiting for engine to single step\n");
+
+    /* Now that we have executed the instruction, restore the pc */
+    asrepl_get_registers(asr->engine_pid, &regs);
+    regs.rip = orig_pc;
+    ptrace(PTRACE_SETREGS, asr->engine_pid, NULL, &regs);
 }
 
 static macro_t *macro_new(const char *name)
@@ -286,5 +329,5 @@ void asrepl_macro_execute(asrepl_t *asr, const char *name)
 
     /* Execute each context in the macro */
     for (ctx=macro->ctxs; ctx; ctx=ctx->next)
-      asrepl_execute(asrepl, ctx);
+      asrepl_execute(asr, ctx);
 }

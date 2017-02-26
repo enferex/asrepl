@@ -72,6 +72,8 @@ typedef unsigned long word_t;
 
 extern asrepl_t *asrepl_init(assembler_e type);
 extern void asrepl_version(void);
+
+/* Accessors */
 extern uintptr_t asrepl_get_pc(pid_t pid);
 extern void asrepl_get_registers(pid_t pid, struct user_regs_struct *regs);
 
@@ -88,9 +90,12 @@ extern void asrepl_delete_ctx(ctx_t *ctx);
  * Returns 'true' on success and 'false' otherwise.
  */
 extern _Bool asrepl_assemble(
-    asrepl_t   *as,
+    asrepl_t   *asr,
     const char *line,
     ctx_t      *ctx);
+
+/* Execute a context.  A context is just machine instructions. */
+extern void asrepl_execute(asrepl_t *asr, const ctx_t *ctx);
 
 /* Routines for macros (only one macro built at a time) */
 extern void asrepl_macro_begin(asrepl_t *asr, const char *name);
