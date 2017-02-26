@@ -269,6 +269,11 @@ void asrepl_macro_begin(asrepl_t *asr, const char *name)
 
     assert(asr);
 
+    if (asr->active_macro) {
+        ERR("/end previous macro before defining a new one.");
+        return;
+    }
+
     if (strnlen(name, MAX_MACRO_NAME) >= MAX_MACRO_NAME) {
         ERR("Macro name is too long... be concise please.");
         return;
