@@ -295,7 +295,7 @@ void asrepl_macro_begin(asrepl_t *asr, const char *name)
     if (!macro)
       ERF("Error creating a macro.");
 
-    macro->next = macro;
+    macro->next = asr->macros;
     asr->macros = macro;
     asr->mode = MODE_MACRO;
 }
