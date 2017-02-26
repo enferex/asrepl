@@ -31,6 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 #include <assert.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/ptrace.h>
@@ -55,9 +56,31 @@ asrepl_t *asrepl_init(assembler_e assembler_type)
     return asr;
 }
 
-ctx_t *asrepl_new_ctx(void)
+ctx_t *asrepl_new_ctx(const char *asm_line)
 {
-    return calloc(1, sizeof(ctx_t));
+    ctx_t *ctx;
+    const size_t len = strnlen(asm_line, MAX_ASM_LINE);
+
+    if (len == 0 || len == MAX_ASM_LINE) {
+        ERR("Invalid asm statement or command.");
+        return NULL;
+    }
+
+   if (!(ctx = calloc(1, sizeof(ctx_t))))
+     return NULL;
+
+   if (!(ctx->asm_line = strdup(asm_line)))
+     return NULL;
+
+   return ctx;
+}
+
+void asrepl_delete_ctx(ctx_t *ctx)
+{
+    if (!ctx)
+      return;
+
+    free(ctx->text);
 }
 
 void asrepl_version(void)
@@ -118,4 +141,150 @@ _Bool asrepl_assemble(asrepl_t *asr, const char *line, ctx_t *ctx)
 {
     assert(asr);
     return assembler_assemble(asr->assembler, line, ctx);
+}
+
+static macro_t *macro_new(const char *name)
+{
+    macro_t *macro;
+
+    if (strnlen(name, MAX_MACRO_NAME) >= MAX_MACRO_NAME) {
+        ERR("Macro name is too long.");
+        return NULL;
+    }
+
+    if (!(macro = calloc(1, sizeof(macro_t))))
+      ERF("Error allocating memory to store a macro.");
+
+    if (!(macro->name = strdup(name)))
+      ERF("Error allocting memory to store the macro name.");
+
+    return macro;
+}
+
+static void macro_delete(macro_t *macro)
+{
+    macro_t *m = macro;
+    while (m) {
+        ctx_t *c = m->ctxs;
+        while (c) {
+            ctx_t *cnext = c->next;
+            asrepl_delete_ctx(c);
+            c = cnext;
+        }
+        macro_t *mnext = m->next;
+        free(m->name);
+        free(m);
+        m = mnext;
+    }
+}
+
+/* TODO: Hash */
+macro_t *asrepl_macro_find(asrepl_t *asr, const char *name)
+{
+    for (macro_t *macro=asr->macros; macro; macro=macro->next)
+      if (strncmp(macro->name, name, MAX_MACRO_NAME) == 0)
+        return macro;
+    return NULL;
+}
+
+/* This is and should be called by a context that has already verified 'name' is
+ * not larger than MAX_MACRO_NAME.
+ */
+static void trim_name(const char *name, char *result)
+{
+    size_t len = strlen(name);
+
+    /* Trim leading whitespace */
+    while (name[0] && isspace(name[0]))
+      ++name;
+    if (name[0] == '\0') {
+        ERR("Invalid macro name.");
+        return;
+    }
+
+    /* Copy the original name (now without leading whitespace) to what the
+     * result will be (for mutation) */
+    memcpy(result, name, len);
+    result[len] = '\0';
+    
+    /* Trim trailing whitespace */
+    for (int i=len-1; i>0; --i)
+      if (isspace(result[i]))
+        result[i] = '\0';
+      else
+        break;
+}
+
+/* Create/Terminate/Populate a macro.
+ * There is only one macro being built at a time, so add/terminate
+ * operate on that.
+ */
+void asrepl_macro_begin(asrepl_t *asr, const char *name)
+{
+    macro_t *macro;
+    char mname[MAX_MACRO_NAME + 1];
+
+    assert(asr);
+
+    if (strnlen(name, MAX_MACRO_NAME) >= MAX_MACRO_NAME) {
+        ERR("Macro name is too long... be concise please.");
+        return;
+    }
+
+    /* Put name into a mutable buffer */
+    trim_name(name, mname);
+    if (mname[0] == '\0') {
+        ERR("Invalid macro name.");
+        return;
+    }
+
+    /* If macro already exists, clean it up and overwrite it. */
+    if ((macro = asrepl_macro_find(asr, mname)))
+      macro_delete(macro);
+    else
+      macro = macro_new(mname);
+
+    if (!macro)
+      ERF("Error creating a macro.");
+
+    macro->next = macro;
+    asr->macros = macro;
+    asr->mode = MODE_MACRO;
+}
+
+void asrepl_macro_end(asrepl_t *asr)
+{
+    assert(asr);
+    asr->mode = MODE_NORMAL;
+}
+
+void asrepl_macro_add_ctx(asrepl_t *asr, ctx_t *ctx)
+{
+    assert(asr && ctx && asr->active_macro);
+    if (!asr->active_macro->tail) {
+        asr->active_macro->ctxs = ctx;
+        asr->active_macro->tail = ctx;
+    }
+    else {
+        asr->active_macro->tail->next = ctx;
+        asr->active_macro->tail = ctx;
+    }
+}
+
+void asrepl_macro_execute(asrepl_t *asr, const char *name)
+{
+    ctx_t *ctx;
+    macro_t *macro;
+    char trimmed[MAX_MACRO_NAME + 1];
+
+    trim_name(name, trimmed);
+
+    if (!(macro = asrepl_macro_find(asr, trimmed))) {
+        ERR("Could not locate macro: %s", trimmed);
+        return;
+    }
+
+    /* Execute each context in the macro */
+    for (ctx=macro->ctxs; ctx; ctx=ctx->next)
+      asrepl_execute(asrepl, ctx);
 }

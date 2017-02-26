@@ -47,6 +47,11 @@
 #define PROMPTC "> "
 #define PROMPT  TAG PROMPTC
 
+/* Maximum length of an accepted ASM statement (instruction)...
+ * 128 seems way large, but for now that's what we're capping at.
+ */
+#define MAX_ASM_LINE 128
+
 #define PR(_msg, ...)\
     fprintf(stdout, TAG PROMPTC " " _msg "\n", ##__VA_ARGS__)
 
@@ -74,7 +79,8 @@ extern void asrepl_get_registers(pid_t pid, struct user_regs_struct *regs);
 extern void asrepl_dump_registers(pid_t pid);
 
 /* Return new context to represent a new blob of machine instructions. */
-extern ctx_t *asrepl_new_ctx(void);
+extern ctx_t *asrepl_new_ctx(const char *asm_line);
+extern void asrepl_delete_ctx(ctx_t *ctx);
 
 /* Assemble the line into machine instructions. 'ctx' will contain
  * the newly assembled machine instructions upon success.
@@ -85,5 +91,12 @@ extern _Bool asrepl_assemble(
     asrepl_t   *as,
     const char *line,
     ctx_t      *ctx);
+
+/* Routines for macros (only one macro built at a time) */
+extern void asrepl_macro_begin(asrepl_t *asr, const char *name);
+extern void asrepl_macro_end(asrepl_t *asr);
+extern void asrepl_macro_add_ctx(asrepl_t *asr, ctx_t *ctx);
+extern void asrepl_macro_execute(asrepl_t *asr, const char *name);
+extern macro_t *asrepl_macro_find(asrepl_t *asr, const char *name);
 
 #endif /* __ASREPL_H */

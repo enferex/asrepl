@@ -40,21 +40,20 @@
 /* The machine code */
 typedef struct _context_t
 {
-    uint8_t *text;
-    size_t   length; /* Bytes of .text */
+    char              *asm_line; /* Allocation managed by readline  */
+    uint8_t           *text;
+    size_t             length;   /* Bytes of .text                  */
+    struct _context_t *next;     /* A macro will have a list of ctx */
 } ctx_t;
 
-typedef struct _ctx_list_t
-{
-    ctx_t              *ctx;
-    struct _ctx_list_t *next;
-} ctx_list_t;
-
 /* Macros are just named lists of contexts (assembled instructions) */
+#define MAX_MACRO_NAME 64
 typedef struct _macro_t
 {
-    const char       *name; /* Set via /def */
-    const ctx_list_t *ctxs;
+    char            *name;
+    ctx_t           *ctxs;
+    ctx_t           *tail; /* Quick access to last inserted item. */
+    struct _macro_t *next;
 } macro_t;
 
 /* Assembler type */
@@ -86,12 +85,29 @@ typedef struct _assembler_t
     const struct _assembler_desc_t *desc;
 } assembler_t;
 
+/* A mode defines the behavior of execution.  Macro mode
+ * means that all user-input asm instructions are collected
+ * and will/might be played back later.
+ *
+ * Macros are named see the command '/def' and '/end' in 
+ * asrepl_commands.c.
+ *
+ * Macro:  Macro mode.
+ * Normal: Not-macro mode.  The instructions are not collected.
+ */
+typedef enum _mode_e
+{
+    MODE_NORMAL = 0,
+    MODE_MACRO
+} mode_e;
 
 /* State object, one for each instance of asreplt... probably only ever one. */
 typedef struct _asrepl_t
 {
+    mode_e       mode;
     assembler_t *assembler;
     macro_t     *macros;
+    macro_t     *active_macro; /* The macro in macros being used. */
     pid_t        engine_pid;
 } asrepl_t;
 

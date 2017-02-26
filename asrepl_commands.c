@@ -63,12 +63,9 @@ DECL_CALLBACK(dump);
 DECL_CALLBACK(exit);
 DECL_CALLBACK(help);
 DECL_CALLBACK(version);
-static void cmd_defmacro(
-    asrepl_t *asr, const repl_cmd_t *cmd, const void *line) {}
-static void cmd_endmacro(
-    asrepl_t *asr, const repl_cmd_t *cmd, const void *unused) {}
-static void cmd_exemacro(
-    asrepl_t *asr, const repl_cmd_t *cmd, const void *line) {}
+DECL_CALLBACK(defmacro);
+DECL_CALLBACK(endmacro);
+DECL_CALLBACK(exemacro);
 
 /* Commands defined */
 static const repl_cmd_t nonprefixed_cmds[] = {
@@ -139,6 +136,38 @@ static void cmd_version(asrepl_t *asr, const repl_cmd_t *cmd, const void *none)
 static void cmd_dump(asrepl_t *asr, const repl_cmd_t *cmd, const void *none)
 {
     asrepl_dump_registers(asr->engine_pid);
+}
+
+static void cmd_defmacro(
+    asrepl_t         *asr,
+    const repl_cmd_t *cmd,
+    const void       *line)
+{
+    const char *c = (const char *)line;
+
+    /* Locate the command name, and advance past that */
+    c = strstr(c, cmd->command);
+    if (!c)
+      return;
+    c += strlen(cmd->command);
+    asrepl_macro_begin(asr, line);
+}
+
+static void cmd_endmacro(
+    asrepl_t         *asr,
+    const repl_cmd_t *cmd,
+    const void       *unused)
+{
+    asrepl_macro_end(asr);
+}
+
+static void cmd_exemacro(
+    asrepl_t         *asr,
+    const repl_cmd_t *cmd,
+    const void       *line)
+{
+    /* Strip off the prefix, asrepl macros have no concept of a prefix. */
+    asrepl_macro_execute(asr, (char *)line + 1);
 }
 
 cmd_status_e asrepl_cmd_process(asrepl_t *asrepl, const char *data)

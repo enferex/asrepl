@@ -52,9 +52,9 @@
 /* Returns 'true' on success and 'false' otherwise. */
 static _Bool init_engine(asrepl_t *asr)
 {
-    assert(asr);
     const pid_t pid = fork();
     
+    assert(asr);
     asr->engine_pid = pid;
 
     if (pid > 0) {
@@ -144,12 +144,6 @@ static void execute(pid_t pid, const ctx_t *ctx)
     ptrace(PTRACE_SETREGS, pid, NULL, &regs);
 }
 
-static void cleanup(ctx_t *ctx)
-{
-    free(ctx->text);
-    memset(ctx, 0, sizeof(ctx_t));
-}
-
 static void usage(const char *execname)
 {
     printf("Usage: %s [-h] [-v] "
@@ -210,7 +204,7 @@ int main(int argc, char **argv)
           continue;
 
         /* Do the real work */
-        if (!(ctx = asrepl_new_ctx()))
+        if (!(ctx = asrepl_new_ctx(line)))
           ERF("Error allocating a new context.");
         asm_result = asrepl_assemble(asr, line, ctx);
         
@@ -218,7 +212,12 @@ int main(int argc, char **argv)
         if (asm_result == true)
           execute(asr->engine_pid, ctx);
 
-        cleanup(ctx);
+        /* If we are in macro mode, and assembled successful, keep the ctx */
+        if (asr->mode == MODE_MACRO && asm_result == true)
+          asrepl_macro_add_ctx(asr, ctx);
+        else
+          asrepl_delete_ctx(ctx);
+
         add_history(line);
     }
 
