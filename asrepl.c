@@ -298,11 +298,13 @@ void asrepl_macro_begin(asrepl_t *asr, const char *name)
     macro->next = asr->macros;
     asr->macros = macro;
     asr->mode = MODE_MACRO;
+    asr->active_macro = macro;
 }
 
 void asrepl_macro_end(asrepl_t *asr)
 {
     assert(asr);
+    asr->active_macro = NULL;
     asr->mode = MODE_NORMAL;
 }
 
