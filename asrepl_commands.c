@@ -170,16 +170,16 @@ static void cmd_exemacro(
     asrepl_macro_execute(asr, (char *)line + 1);
 }
 
-cmd_status_e asrepl_cmd_process(asrepl_t *asrepl, const char *data)
+cmd_status_e asrepl_cmd_process(asrepl_t *asrepl, const char *line)
 {
-    if (!data)
+    if (!line)
       return CMD_NOT_A_COMMAND;
 
-    else if (IS_NOT_PREFIXED(data)) {
+    else if (IS_NOT_PREFIXED(line)) {
         for (int i=0; i<ARRAY_LENGTH(nonprefixed_cmds); ++i) {
             const repl_cmd_t *cmd = &nonprefixed_cmds[i];
-            if (strncmp(data, cmd->command, strlen(cmd->command)) == 0) {
-                nonprefixed_cmds[i].fn(asrepl, cmd, NULL);
+            if (strncmp(line, cmd->command, strlen(cmd->command)) == 0) {
+                nonprefixed_cmds[i].fn(asrepl, cmd, line);
                 return CMD_HANDLED;
            }
         }
@@ -188,8 +188,8 @@ cmd_status_e asrepl_cmd_process(asrepl_t *asrepl, const char *data)
     else {  /* Else: prefixed */
         for (int i=0; i<ARRAY_LENGTH(prefixed_cmds); ++i) {
             const repl_cmd_t *cmd = &prefixed_cmds[i];
-            if (strncmp(data, cmd->command, strlen(cmd->command)) == 0) {
-                prefixed_cmds[i].fn(asrepl, cmd, NULL);
+            if (strncmp(line, cmd->command, strlen(cmd->command)) == 0) {
+                prefixed_cmds[i].fn(asrepl, cmd, line);
                 return CMD_HANDLED;
            }
         }
