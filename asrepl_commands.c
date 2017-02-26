@@ -116,7 +116,7 @@ static void cmd_help(asrepl_t *asr, const repl_cmd_t *cmd, const void *unused)
     PRINT("  terminated once an /end command is issued.  Once defined, a ");
     PRINT("  macro can be executed as a command: @<name>");
     PRINT("  Example:");
-    PRINT("    /def macro mymacro");
+    PRINT("    /def mymacro");
     PRINT("    mov $0x2a, %%rax");
     PRINT("    mov %%rax, %%rbp");
     PRINT("    /end");
