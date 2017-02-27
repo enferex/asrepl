@@ -1,6 +1,4 @@
-* asm macros
 * user defined data blobs
 * ncurses interface
-* autotools
 * support other architectures
 * goats

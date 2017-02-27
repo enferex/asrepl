@@ -328,7 +328,7 @@ void asrepl_macro_execute(asrepl_t *asr, const char *name)
     trim_name(name, trimmed);
 
     if (!(macro = asrepl_macro_find(asr, trimmed))) {
-        ERR("Could not locate macro: %s", trimmed);
+        ERR("Could not locate macro: %s%s", MACRO_PREFIX, trimmed);
         return;
     }
 

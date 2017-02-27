@@ -66,30 +66,32 @@ DECL_CALLBACK(version);
 DECL_CALLBACK(defmacro);
 DECL_CALLBACK(endmacro);
 DECL_CALLBACK(exemacro);
+DECL_CALLBACK(listmacros);
 
 /* Commands defined */
 static const repl_cmd_t nonprefixed_cmds[] = {
-    {"$",  "Defined macro name (see /help).", cmd_exemacro, true},
-    {"r",  "Dump registers.",                 cmd_dump,     true},
-    {"q",  "Exit",                            cmd_exit,     true},
-    {"x",  "Exit",                            cmd_exit,     true},
-    {"?",  "This help message.",              cmd_help,     true}
+    {MACRO_PREFIX, "Defined macro name (see /help).", cmd_exemacro, true},
+    {"r",          "Dump registers.",                 cmd_dump,     true},
+    {"q",          "Exit",                            cmd_exit,     true},
+    {"x",          "Exit",                            cmd_exit,     true},
+    {"?",          "This help message.",              cmd_help,     true}
 };
 
 /* Commands defined */
 static const repl_cmd_t prefixed_cmds[] = {
-    {"/regs",    "Dump registers.",             cmd_dump,     false},
-    {"/reg",     "Dump registers.",             cmd_dump,     true},
-    {"/def",     "Define a macro (see /help).", cmd_defmacro, false},
-    {"/end",     "End a macro.",                cmd_endmacro, false},
-    {"/help",    "This help message.",          cmd_help,     false},
-    {"/h",       "This help message.",          cmd_help,     true},
-    {"/wtf",     "This help message.",          cmd_help,     true},
-    {"/exit",    "Exit",                        cmd_exit,     false},
-    {"/quit",    "Exit",                        cmd_exit,     true},
-    {"/ver",     "About/Version information",   cmd_version,  false},
-    {"/version", "About/Version information",   cmd_version,  true},
-    {"/about",   "About/Version information",   cmd_version,  true},
+    {"/regs",    "Dump registers.",             cmd_dump,       false},
+    {"/reg",     "Dump registers.",             cmd_dump,       true},
+    {"/def",     "Define a macro (see /help).", cmd_defmacro,   false},
+    {"/end",     "End a macro.",                cmd_endmacro,   false},
+    {"/list",    "List macros.",                cmd_listmacros, false},
+    {"/help",    "This help message.",          cmd_help,       false},
+    {"/h",       "This help message.",          cmd_help,       true},
+    {"/wtf",     "This help message.",          cmd_help,       true},
+    {"/exit",    "Exit",                        cmd_exit,       false},
+    {"/quit",    "Exit",                        cmd_exit,       true},
+    {"/ver",     "About/Version information",   cmd_version,    false},
+    {"/version", "About/Version information",   cmd_version,    true},
+    {"/about",   "About/Version information",   cmd_version,    true},
 };
 
 static void cmd_help(asrepl_t *asr, const repl_cmd_t *cmd, const void *unused)
@@ -168,6 +170,18 @@ static void cmd_exemacro(
 {
     /* Strip off the prefix, asrepl macros have no concept of a prefix. */
     asrepl_macro_execute(asr, (char *)line + 1);
+}
+
+static void cmd_listmacros(
+    asrepl_t         *asr,
+    const repl_cmd_t *cmd,
+    const void       *unused)
+{
+    int i = 0;
+
+    PRINT("Macros:");
+    for (const macro_t *macro=asr->macros; macro; macro=macro->next)
+      PRINT("  %d) %s%s", ++i, MACRO_PREFIX, macro->name);
 }
 
 cmd_status_e asrepl_cmd_process(asrepl_t *asrepl, const char *line)

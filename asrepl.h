@@ -52,6 +52,9 @@
  */
 #define MAX_ASM_LINE 128
 
+/* When querying a macro, the prefix must be used <prefix><macroname> */
+#define MACRO_PREFIX "$"
+
 #define PR(_msg, ...)\
     fprintf(stdout, TAG PROMPTC _msg "\n", ##__VA_ARGS__)
 
