@@ -289,10 +289,8 @@ void asrepl_macro_begin(asrepl_t *asr, const char *name)
     /* If macro already exists, clean it up and overwrite it. */
     if ((macro = asrepl_macro_find(asr, mname)))
       macro_delete(macro);
-    else
-      macro = macro_new(mname);
 
-    if (!macro)
+    if (!(macro = macro_new(mname)))
       ERF("Error creating a macro.");
 
     macro->next = asr->macros;
