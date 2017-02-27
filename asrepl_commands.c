@@ -182,6 +182,9 @@ static void cmd_listmacros(
     PRINT("Macros:");
     for (const macro_t *macro=asr->macros; macro; macro=macro->next)
       PRINT("  %d) %s%s", ++i, MACRO_PREFIX, macro->name);
+
+    if (i == 0)
+      PRINT("(No macros defined)");
 }
 
 cmd_status_e asrepl_cmd_process(asrepl_t *asrepl, const char *line)
