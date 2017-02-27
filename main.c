@@ -169,8 +169,10 @@ int main(int argc, char **argv)
           ERF("Error allocating a new context.");
         asm_result = asrepl_assemble(asr, line, ctx);
         
-        /* The assembly was generated correctly, execute it. */
-        if (asm_result == true)
+        /* The assembly was generated correctly, execute it.
+         * If we are building a macro, do not execute while building it.
+         */
+        if (asm_result == true && asr->mode != MODE_MACRO)
           asrepl_execute(asr, ctx);
 
         /* If we are in macro mode, and assembled successful, keep the ctx */
