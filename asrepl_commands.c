@@ -143,14 +143,14 @@ static void cmd_defmacro(
     const repl_cmd_t *cmd,
     const void       *line)
 {
-    const char *c = (const char *)line;
+    const char *name = (const char *)line;
 
     /* Locate the command name, and advance past that */
-    c = strstr(c, cmd->command);
-    if (!c)
+    name = strstr(name, cmd->command);
+    if (!name)
       return;
-    c += strlen(cmd->command);
-    asrepl_macro_begin(asr, line);
+    name += strlen(cmd->command);
+    asrepl_macro_begin(asr, name);
 }
 
 static void cmd_endmacro(
