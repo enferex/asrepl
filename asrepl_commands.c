@@ -62,6 +62,7 @@ typedef struct _repl_cmd_t {
 DECL_CALLBACK(dump);
 DECL_CALLBACK(exit);
 DECL_CALLBACK(help);
+DECL_CALLBACK(tui);
 DECL_CALLBACK(version);
 DECL_CALLBACK(defmacro);
 DECL_CALLBACK(endmacro);
@@ -89,6 +90,8 @@ static const repl_cmd_t prefixed_cmds[] = {
     {"/wtf",     "This help message.",          cmd_help,       true},
     {"/exit",    "Exit",                        cmd_exit,       false},
     {"/quit",    "Exit",                        cmd_exit,       true},
+    {"/tui",     "Text User Interface",         cmd_tui,        true},
+    {"/gui",     "Text User Interface",         cmd_tui,        false},
     {"/ver",     "About/Version information",   cmd_version,    false},
     {"/version", "About/Version information",   cmd_version,    true},
     {"/about",   "About/Version information",   cmd_version,    true},
@@ -185,6 +188,21 @@ static void cmd_listmacros(
 
     if (i == 0)
       PRINT("(No macros defined)");
+}
+
+static void cmd_tui(asrepl_t *asr, const repl_cmd_t *cmd, const void *unused)
+{
+#ifndef HAVE_NCURSES
+    ERR("Ncurses support was not compiled into %s", NAME);
+    return;
+#else
+    static _Bool enabled = false;
+    enabled ^= true;
+    if (enabled)
+      tui_init();
+    else
+      tui_exit();
+#endif
 }
 
 cmd_status_e asrepl_cmd_process(asrepl_t *asrepl, const char *line)
