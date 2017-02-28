@@ -205,7 +205,7 @@ static _Bool keystone_init(assembler_t *as)
     if(err != KS_ERR_OK)
       return false;
 
-    if (!as->handle)
+    if (as->handle)
       return false;
 
     as->handle = (assembler_h)ks;
