@@ -32,6 +32,7 @@
  ******************************************************************************/
 #include "config.h"
 #ifdef HAVE_LIBNCURSES
+>>>>>>> Integrate tui work
 #ifndef __TUI_H
 #define __TUI_H
 
