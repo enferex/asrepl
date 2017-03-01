@@ -3167,6 +3167,96 @@ if test "x$ac_cv_lib_unicorn_uc_context_alloc" = xyes; then :
   LIBS+=-lpthread
 fi
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for initscr in -lncurses" >&5
+$as_echo_n "checking for initscr in -lncurses... " >&6; }
+if ${ac_cv_lib_ncurses_initscr+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lncurses  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char initscr ();
+int
+main ()
+{
+return initscr ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_ncurses_initscr=yes
+else
+  ac_cv_lib_ncurses_initscr=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_ncurses_initscr" >&5
+$as_echo "$ac_cv_lib_ncurses_initscr" >&6; }
+if test "x$ac_cv_lib_ncurses_initscr" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBNCURSES 1
+_ACEOF
+
+  LIBS="-lncurses $LIBS"
+
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for new_panel in -lpanel" >&5
+$as_echo_n "checking for new_panel in -lpanel... " >&6; }
+if ${ac_cv_lib_panel_new_panel+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lpanel  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char new_panel ();
+int
+main ()
+{
+return new_panel ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_panel_new_panel=yes
+else
+  ac_cv_lib_panel_new_panel=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_panel_new_panel" >&5
+$as_echo "$ac_cv_lib_panel_new_panel" >&6; }
+if test "x$ac_cv_lib_panel_new_panel" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBPANEL 1
+_ACEOF
+
+  LIBS="-lpanel $LIBS"
+
+fi
+
 
 # Checks for header files.
 ac_ext=c
@@ -3566,7 +3656,7 @@ fi
 done
 
 
-for ac_header in stdint.h stdlib.h string.h unistd.h
+for ac_header in stdint.h stdlib.h string.h unistd.h ncurses.h panel.h
 do :
   as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
 ac_fn_c_check_header_mongrel "$LINENO" "$ac_header" "$as_ac_Header" "$ac_includes_default"

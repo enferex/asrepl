@@ -37,6 +37,8 @@
 #include <unistd.h>
 #include "asrepl.h"
 #include "commands.h"
+#include "config.h"
+#include "tui.h"
 
 /* REPL commands beginning with a leading '/' are considered prefix,
  * else they are not prefixed.  The reason for the two command types
@@ -192,7 +194,7 @@ static void cmd_listmacros(
 
 static void cmd_tui(asrepl_t *asr, const repl_cmd_t *cmd, const void *unused)
 {
-#ifndef HAVE_NCURSES
+#ifndef HAVE_LIBNCURSES
     ERR("Ncurses support was not compiled into %s", NAME);
     return;
 #else
