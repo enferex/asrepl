@@ -9,6 +9,12 @@
 /* Define to 1 if you have the `keystone' library (-lkeystone). */
 #undef HAVE_LIBKEYSTONE
 
+/* Define to 1 if you have the `ncurses' library (-lncurses). */
+#undef HAVE_LIBNCURSES
+
+/* Define to 1 if you have the `panel' library (-lpanel). */
+#undef HAVE_LIBPANEL
+
 /* Define to 1 if you have the `readline' library (-lreadline). */
 #undef HAVE_LIBREADLINE
 
@@ -21,6 +27,12 @@
 
 /* Define to 1 if you have the `memset' function. */
 #undef HAVE_MEMSET
+
+/* Define to 1 if you have the <ncurses.h> header file. */
+#undef HAVE_NCURSES_H
+
+/* Define to 1 if you have the <panel.h> header file. */
+#undef HAVE_PANEL_H
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
