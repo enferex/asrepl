@@ -1,3 +1,4 @@
 Makefile
 config.h
-.asrepl*
+.asrepl.temp.o
+.asrepl.temp.s
