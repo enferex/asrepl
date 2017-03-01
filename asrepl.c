@@ -43,6 +43,8 @@
 #define REG64(_regs, _reg) \
     printf("%s\t 0x%llx\n", #_reg, (_regs)->_reg)
 
+char *prompt = NULL;
+
 asrepl_t *asrepl_init(assembler_e assembler_type)
 {
     asrepl_t *asr = calloc(1, sizeof(asrepl_t));
@@ -87,6 +89,14 @@ void asrepl_delete_ctx(ctx_t *ctx)
 void asrepl_version(void)
 {
     printf("%s v%d.%d, (c)%d\n", NAME, MAJOR, MINOR, YEAR);
+}
+
+void asrepl_update_prompt(const char *new_prompt)
+{
+    if (strnlen(new_prompt, MAX_PROMPT_LENGTH) >= MAX_PROMPT_LENGTH)
+      return;
+    free(prompt);
+    prompt = strndup(new_prompt, MAX_PROMPT_LENGTH);
 }
 
 void asrepl_get_registers(pid_t pid, struct user_regs_struct *gpregs)

@@ -153,7 +153,8 @@ int main(int argc, char **argv)
       ERF("Error starting engine process, terminating now.");
 
     /* Engine has started, now query user for asm code */
-    while ((line = readline(PROMPT))) {
+    asrepl_update_prompt(DEFAULT_PROMPT);
+    while ((line = readline(prompt))) {
         _Bool asm_result;
         ctx_t *ctx;
 

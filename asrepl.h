@@ -44,13 +44,17 @@
 #define MINOR   1
 #define YEAR    2017
 #define TAG     "asm"
-#define PROMPTC "> "
-#define PROMPT  TAG PROMPTC
 
 /* Maximum length of an accepted ASM statement (instruction)...
  * 128 seems way large, but for now that's what we're capping at.
  */
 #define MAX_ASM_LINE 128
+
+/* Prompt goodies */
+#define MAX_PROMPT_LENGTH 32
+#define PROMPTC           ">"
+#define DEFAULT_PROMPT    TAG PROMPTC " "
+#define ERROR_PROMPT      TAG " error" PROMPTC " "
 
 /* When querying a macro, the prefix must be used <prefix><macroname> */
 #define MACRO_PREFIX "$"
@@ -62,11 +66,11 @@
     fprintf(stdout, _msg "\n", ##__VA_ARGS__)
 
 #define ERR(_msg, ...) \
-    fprintf(stderr, TAG " error" PROMPTC _msg  "\n", ##__VA_ARGS__)
+    fprintf(stderr, ERROR_PROMPT _msg  "\n", ##__VA_ARGS__)
 
 #define ERF(_msg, ...)                                                       \
     do {                                                                     \
-        fprintf(stderr, TAG " error" PROMPTC _msg  "\n", ##__VA_ARGS__); \
+        fprintf(stderr, ERROR_PROMPT _msg  "\n", ##__VA_ARGS__); \
         exit(EXIT_FAILURE);                                                  \
     } while (0)
 
@@ -74,6 +78,10 @@
 typedef unsigned long word_t;
 
 extern asrepl_t *asrepl_init(assembler_e type);
+
+/* Utilities */
+extern char *prompt;
+extern void asrepl_update_prompt(const char *new_prompt);
 extern void asrepl_version(void);
 
 /* Accessors */
