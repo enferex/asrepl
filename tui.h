@@ -30,7 +30,8 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
-#ifdef HAVE_NCURSES
+#include "config.h"
+#ifdef HAVE_LIBNCURSES
 #ifndef __TUI_H
 #define __TUI_H
 
@@ -41,4 +42,4 @@ extern void tui_update(void);
 extern void tui_exit(void); /* Stop/shutdown the TUI */
 
 #endif /* __TUI_H      */
-#endif /* HAVE_NCURSES */
+#endif /* HAVE_LIBNCURSES */

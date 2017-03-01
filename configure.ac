@@ -14,9 +14,11 @@ AC_PROG_CC
 # Checks for libraries.
 AC_CHECK_LIB([readline], [readline])
 AC_CHECK_LIB([keystone], [ks_asm])
+AC_CHECK_LIB([ncurses],  [initscr])
+AC_CHECK_LIB([panel],    [new_panel])
 
 # Checks for header files.
-AC_CHECK_HEADERS([stdint.h stdlib.h string.h unistd.h])
+AC_CHECK_HEADERS([stdint.h stdlib.h string.h unistd.h ncurses.h panel.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_CHECK_HEADER_STDBOOL

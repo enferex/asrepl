@@ -30,7 +30,8 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
-#ifdef HAVE_NCURSES
+#include "config.h"
+#ifdef HAVE_LIBNCURSES
 #include <ncurses.h>
 #include <panel.h>
 #include "tui.h"
@@ -59,7 +60,7 @@ void tui_init(void)
     /* Output window (top middle) */
     out_win = newwin(r, c, 0, c*1);
     box(out_win, 0, 0);
-    mvwprintw(out_win, 0, 3, "=[ Output ]=");
+    mvwprintw(out_win, 0, 3, "=[ Macros ]=");
     
     /* Status window (top right) */
     stat_win = newwin(r, c, 0, c*2);
@@ -69,7 +70,7 @@ void tui_init(void)
     /* REPL window (bottom) */
     repl_win = newwin(ROWS-r, COLS,  r, 0);
     box(repl_win, 0, 0);
-    mvwprintw(repl_win, 0, 3, "=[ Input ]=");
+    mvwprintw(repl_win, 0, 3, "=[ Input/Output ]=");
     
     /* Panels */ 
     stat_pan = new_panel(stat_win);
@@ -92,4 +93,4 @@ void tui_exit(void)
     endwin();
 }
 
-#endif /* HAVE_NCURSES */
+#endif /* HAVE_LIBNCURSES */
