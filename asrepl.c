@@ -276,6 +276,7 @@ void asrepl_macro_begin(asrepl_t *asr, const char *name)
 {
     macro_t *macro;
     char mname[MAX_MACRO_NAME + 1];
+    char new_prompt[MAX_PROMPT_LENGTH];
 
     assert(asr);
 
@@ -303,6 +304,16 @@ void asrepl_macro_begin(asrepl_t *asr, const char *name)
     if (!(macro = macro_new(mname)))
       ERF("Error creating a macro.");
 
+    /* Update the prompt */
+    if (strlen(mname) + 2 < MAX_PROMPT_LENGTH) {
+        snprintf(new_prompt, MAX_PROMPT_LENGTH, "%s%s ", mname, PROMPTC);
+        asrepl_update_prompt(new_prompt);
+    }
+    else {
+        snprintf(new_prompt, MAX_PROMPT_LENGTH, "macro%s ", PROMPTC);
+        asrepl_update_prompt(new_prompt);
+    }
+
     macro->next = asr->macros;
     asr->macros = macro;
     asr->mode = MODE_MACRO;
@@ -314,6 +325,9 @@ void asrepl_macro_end(asrepl_t *asr)
     assert(asr);
     asr->active_macro = NULL;
     asr->mode = MODE_NORMAL;
+
+    /* Update the prompt */
+    asrepl_update_prompt(DEFAULT_PROMPT);
 }
 
 void asrepl_macro_add_ctx(asrepl_t *asr, ctx_t *ctx)
