@@ -39,11 +39,12 @@
 #include <sys/wait.h>
 #include "asrepl.h"
 #include "assembler.h"
+#include "engine.h"
 
 #define REG64(_regs, _reg) \
     printf("%s\t 0x%llx\n", #_reg, (_regs)->_reg)
 
-asrepl_t *asrepl_init(assembler_e assembler_type)
+asrepl_t *asrepl_init(assembler_e assembler_type, engine_e engine_type)
 {
     asrepl_t *asr = calloc(1, sizeof(asrepl_t));
 
@@ -53,6 +54,9 @@ asrepl_t *asrepl_init(assembler_e assembler_type)
     /* Choose and initialize the assembler */
     if (!(asr->assembler = assembler_init(assembler_type)))
       ERF("Error locating an assembler to use.");
+
+    if (!(asr->engine = engine_init(engine_type)))
+      ERF("Error locating an engine to use.");
 
     return asr;
 }

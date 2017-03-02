@@ -39,71 +39,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/user.h>
-#include <sys/wait.h>
 #include <readline/readline.h>
 #include <readline/history.h>
-#include <sys/ptrace.h>
 #include "asrepl.h"
 #include "asrepl_commands.h"
 #include "assembler.h"
+#include "engine.h"
 #include "config.h"
 
-/* Returns 'true' on success and 'false' otherwise. */
-static _Bool init_engine(asrepl_t *asr)
-{
-    const pid_t pid = fork();
-    
-    assert(asr);
-    asr->engine_pid = pid;
-
-    if (pid > 0) {
-        /* Parent with child's pid.  Wait for the child. */
-        int status;
-        const pid_t ret = waitpid(pid, &status, __WALL);
-        return (pid == ret && WIFSTOPPED(status));
-
-    }
-    else if (pid == 0) {
-        /* Child (tracee) */
-        if (ptrace(PTRACE_TRACEME, pid, NULL, NULL) == -1) {
-            ERF("Error setting traceme in the child process: %s",
-                strerror(errno));
-        }
-
-        /* Just a ton of nops for space */
-        for ( ;; ) {
-            __asm__ __volatile__ ("nop\n");
-            __asm__ __volatile__ ("nop\n");
-            __asm__ __volatile__ ("nop\n");
-            __asm__ __volatile__ ("nop\n");
-            __asm__ __volatile__ ("nop\n");
-            __asm__ __volatile__ ("nop\n");
-            __asm__ __volatile__ ("nop\n");
-            __asm__ __volatile__ ("nop\n");
-
-            /* All instructions should be inserted here, since
-             * this is where the pc will be in the tracee as the int3 below
-             * will signal the tracer to start inserting instructions.
-             */
-            __asm__ __volatile__ ("int $3\n");
-
-            __asm__ __volatile__ ("nop\n");
-            __asm__ __volatile__ ("nop\n");
-            __asm__ __volatile__ ("nop\n");
-            __asm__ __volatile__ ("nop\n");
-            __asm__ __volatile__ ("nop\n");
-            __asm__ __volatile__ ("nop\n");
-            __asm__ __volatile__ ("nop\n");
-            __asm__ __volatile__ ("nop\n");
-            __asm__ __volatile__ ("nop\n");
-        }
-    }
-    else
-      ERR("Error fork()ing child process: %s", strerror(errno));
-
-    return false; /* Error */
-}
 
 static void usage(const char *execname)
 {
@@ -126,16 +69,20 @@ int main(int argc, char **argv)
     int opt;
     char *line;
     assembler_e assembler_type;
+    engine_e engine_type;
     asrepl_t *asr;
 
     /* Setup defaults for command line args */
     assembler_type = ASSEMBLER_GNU_AS_X8664;
+    engine_type    = ENGINE_NATIVE;
     while ((opt = getopt(argc, argv, "hkv")) != -1) {
     switch (opt) {
         case 'h': usage(argv[0]);   exit(EXIT_SUCCESS);
         case 'v': asrepl_version(); exit(EXIT_SUCCESS);
 #ifdef HAVE_LIBKEYSTONE
-        case 'k': assembler_type = ASSEMBLER_KEYSTONE; break;
+#ifdef HAVE_LIBUNICORN
+        case 'k': assembler_type = ASSEMBLER_KEYSTONE; engine_type = ENGINE_UNICORN; break;
+#endif
 #endif
         default: break;
         }
@@ -145,12 +92,8 @@ int main(int argc, char **argv)
     ERF("Sorry, %s only operates on x86-64 architectures.", NAME);
 #endif
     /* Create a state object for this instance of asrepl */
-    if (!(asr = asrepl_init(assembler_type)))
+    if (!(asr = asrepl_init(assembler_type, engine_type)))
       ERF("Error initializing a new asrepl instance.");
-
-    /* Initialize the engine */
-    if (init_engine(asr) == false)
-      ERF("Error starting engine process, terminating now.");
 
     /* Engine has started, now query user for asm code */
     while ((line = readline(PROMPT))) {
