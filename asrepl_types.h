@@ -112,12 +112,13 @@ typedef enum
 	ENGINE_MAX
 } engine_e;
 
-typedef void* engine_h;
+typedef void *engine_h;
 struct _engine_desc_t;
 typedef struct _engine_t
 {
 	engine_e type;
 	engine_h handle;
+	pid_t	 engine_pid;
 	engine_h state;
 	const struct _engine_desc_t *desc;
 } engine_t;
@@ -130,7 +131,7 @@ typedef struct _asrepl_t
     engine_t	*engine;
     macro_t     *macros;
     macro_t     *active_macro; /* The macro in macros being used. */
-    pid_t        engine_pid;
+    //pid_t        engine_pid;
 } asrepl_t;
 
 #endif /* __ASREPL_TYPES_H */

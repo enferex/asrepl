@@ -137,7 +137,7 @@ static void cmd_version(asrepl_t *asr, const repl_cmd_t *cmd, const void *none)
 
 static void cmd_dump(asrepl_t *asr, const repl_cmd_t *cmd, const void *none)
 {
-    asrepl_dump_registers(asr->engine_pid);
+    asrepl_dump_registers(asr);
 }
 
 static void cmd_defmacro(

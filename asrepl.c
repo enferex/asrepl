@@ -41,9 +41,6 @@
 #include "assembler.h"
 #include "engine.h"
 
-#define REG64(_regs, _reg) \
-    printf("%s\t 0x%llx\n", #_reg, (_regs)->_reg)
-
 asrepl_t *asrepl_init(assembler_e assembler_type, engine_e engine_type)
 {
     asrepl_t *asr = calloc(1, sizeof(asrepl_t));
@@ -93,52 +90,10 @@ void asrepl_version(void)
     printf("%s v%d.%d, (c)%d\n", NAME, MAJOR, MINOR, YEAR);
 }
 
-void asrepl_get_registers(pid_t pid, struct user_regs_struct *gpregs)
+void asrepl_dump_registers(asrepl_t *asr)
 {
-    memset(gpregs, 0, sizeof(*gpregs));
-    ptrace(PTRACE_GETREGS, pid, NULL, gpregs);
-}
-
-uintptr_t asrepl_get_pc(pid_t pid)
-{
-    struct user_regs_struct gpregs;
-    asrepl_get_registers(pid, &gpregs);
-    return gpregs.rip;
-}
-
-void asrepl_dump_registers(pid_t pid)
-{
-    struct user_regs_struct regs;
-
-    asrepl_get_registers(pid, &regs);
-
-    REG64(&regs, eflags);
-    REG64(&regs, rip);
-    REG64(&regs, cs);
-    REG64(&regs, ds);
-    REG64(&regs, es);
-    REG64(&regs, fs);
-    REG64(&regs, gs);
-    REG64(&regs, ss);
-    REG64(&regs, rbp);
-    REG64(&regs, rsp);
-    REG64(&regs, rax);
-    REG64(&regs, rbx);
-    REG64(&regs, rcx);
-    REG64(&regs, rdx);
-    REG64(&regs, rdi);
-    REG64(&regs, rsi);
-    REG64(&regs, r8);
-    REG64(&regs, r9);
-    REG64(&regs, r10);
-    REG64(&regs, r11);
-    REG64(&regs, r12);
-    REG64(&regs, r13);
-    REG64(&regs, r14);
-    REG64(&regs, r15);
-    REG64(&regs, fs_base);
-    REG64(&regs, gs_base);
-/*    REG64(&regs, orig_rax); */
+    assert(asr);
+    return engine_dump_registers(asr->engine);
 }
 
 /* Call the assembler to assemble this */
@@ -151,43 +106,18 @@ _Bool asrepl_assemble(asrepl_t *asr, const char *line, ctx_t *ctx)
 /* Execute some ctx data. */
 void asrepl_execute(asrepl_t *asr, const ctx_t *ctx)
 {
-    int i, status, n_words;
-    pid_t ret;
-    uint8_t *insns;
-    uintptr_t orig_pc, pc;
-    struct user_regs_struct regs;
+	assert(asr);
 
-    assert(asr);
+	if (ctx->text == NULL)
+		return;
 
-    if (ctx->text == NULL)
-      return; /* Non-fatal error */
+	// need to engine_update & engine_execute
+	/*if (!engine_update(asr->engine, ctx->text, ctx->length)){
+		ERR("Failed to update engine execution context");
+		return;
+	}*/
 
-    /* We will restore the pc after we single step and gather registers */
-    orig_pc = asrepl_get_pc(asr->engine_pid);
-
-    /* POKETEXT operates on word size units (round up) */
-    pc = orig_pc;
-    insns = ctx->text;
-    n_words = (ctx->length / sizeof(word_t));
-    if (ctx->length % sizeof(word_t))
-      ++n_words;
-    for (i=0; i<n_words; ++i) {
-        word_t word = *(word_t *)insns;
-        ptrace(PTRACE_POKETEXT, asr->engine_pid, (void *)pc, (void *)word);
-        pc    += sizeof(word_t);
-        insns += sizeof(word_t);
-    }
-
-    /* Now that data is loaded at the PC of the engine, single step one insn */
-    ptrace(PTRACE_SINGLESTEP, asr->engine_pid, NULL, NULL);
-    ret = waitpid(asr->engine_pid, &status, __WALL);
-    if (ret != 0 && !WIFSTOPPED(status))
-      ERF("Error waiting for engine to single step\n");
-
-    /* Now that we have executed the instruction, restore the pc */
-    asrepl_get_registers(asr->engine_pid, &regs);
-    regs.rip = orig_pc;
-    ptrace(PTRACE_SETREGS, asr->engine_pid, NULL, &regs);
+	return engine_execute(asr->engine, ctx);
 }
 
 static macro_t *macro_new(const char *name)
