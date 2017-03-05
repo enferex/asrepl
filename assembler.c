@@ -135,9 +135,6 @@ static _Bool read_elf_text_section(const char *obj_name, ctx_t *ctx)
         if (!(ctx->text = malloc(SHDR(shdr,sh_size))))
           ERF("Error allocating room to store the binary's read-only data");
 
-        if (!(ctx->text = malloc(SHDR(shdr,sh_size))))
-          ERF("Error allocating data from .text");
-
         /* Read in .text contents */
         fseek(fp, SHDR(shdr,sh_offset), SEEK_SET);
         if (fread(ctx->text, 1, SHDR(shdr,sh_size), fp) != SHDR(shdr,sh_size))

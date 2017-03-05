@@ -77,7 +77,8 @@
 /* Ptrace operates on word size thingies */
 typedef unsigned long word_t;
 
-extern asrepl_t *asrepl_init(assembler_e type);
+/* Initialize asrepl: Sets up the assembler and execution engine */
+extern asrepl_t *asrepl_init(assembler_e type, engine_e engine);
 
 /* Utilities */
 extern char *prompt;
@@ -89,7 +90,7 @@ extern uintptr_t asrepl_get_pc(pid_t pid);
 extern void asrepl_get_registers(pid_t pid, struct user_regs_struct *regs);
 
 /* Print register values to stdout */
-extern void asrepl_dump_registers(pid_t pid);
+extern void asrepl_dump_registers(asrepl_t *asr);
 
 /* Return new context to represent a new blob of machine instructions. */
 extern ctx_t *asrepl_new_ctx(const char *asm_line);

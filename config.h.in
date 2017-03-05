@@ -12,6 +12,9 @@
 /* Define to 1 if you have the `readline' library (-lreadline). */
 #undef HAVE_LIBREADLINE
 
+/* Define to 1 if you have the `unicorn' library (-lunicorn). */
+#undef HAVE_LIBUNICORN
+
 /* Define to 1 if your system has a GNU libc compatible `malloc' function, and
    to 0 otherwise. */
 #undef HAVE_MALLOC
