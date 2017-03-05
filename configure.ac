@@ -11,10 +11,11 @@ AC_PROG_CC
 # Definitions
 # AC_DEFINE([ASSEMBLER], CCAS, [Define assembler to use.])
 
-# Checks for libraries.
+# Checks for libraries (we check unicorn twice to easily add -lpthread to LIBS)
 AC_CHECK_LIB([readline], [readline])
 AC_CHECK_LIB([keystone], [ks_asm])
-AC_CHECK_LIB([unicorn],  [uc_context_restore])
+AC_CHECK_LIB([unicorn],  [uc_context_alloc], [], [], [-lpthread])
+AC_CHECK_LIB([unicorn],  [uc_context_alloc], [LIBS+=-lpthread], [], [-lpthread])
 
 # Checks for header files.
 AC_CHECK_HEADERS([stdint.h stdlib.h string.h unistd.h])
