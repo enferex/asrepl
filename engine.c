@@ -24,34 +24,34 @@
 
 typedef struct _engine_desc_t
 {
-	_Bool (*init)(engine_t		*eng);
-	_Bool (*shutdown)(engine_t	*eng);
+    _Bool (*init)(engine_t      *eng);
+    _Bool (*shutdown)(engine_t  *eng);
 
-	//_Bool (*update)(engine_t *eng, const char *instructions, size_t length);
-	//void (*execute)(engine_t *eng, size_t length, size_t count);
-	void (*execute)(engine_t *eng, const ctx_t *ctx);
-	void (*dump_registers)(engine_t *eng);
+    //_Bool (*update)(engine_t *eng, const char *instructions, size_t length);
+    //void (*execute)(engine_t *eng, size_t length, size_t count);
+    void (*execute)(engine_t *eng, const ctx_t *ctx);
+    void (*dump_registers)(engine_t *eng);
 } engine_desc_t;
 
-void asrepl_get_registers(pid_t pid, struct user_regs_struct *gpregs)
+static void get_registers(pid_t pid, struct user_regs_struct *gpregs)
 {
     memset(gpregs, 0, sizeof(*gpregs));
     ptrace(PTRACE_GETREGS, pid, NULL, gpregs);
 }
 
-uintptr_t asrepl_get_pc(pid_t pid)
+static uintptr_t get_pc(pid_t pid)
 {
     struct user_regs_struct gpregs;
-    asrepl_get_registers(pid, &gpregs);
+    get_registers(pid, &gpregs);
     return gpregs.rip;
 }
 
-void native_dump_registers(engine_t *eng)
+static void native_dump_registers(engine_t *eng)
 {
     pid_t pid = eng->engine_pid;
     struct user_regs_struct regs;
 
-    asrepl_get_registers(pid, &regs);
+    get_registers(pid, &regs);
 
     REG64(&regs, eflags);
     REG64(&regs, rip);
@@ -81,6 +81,7 @@ void native_dump_registers(engine_t *eng)
     REG64(&regs, gs_base);
 /*    REG64(&regs, orig_rax); */
 }
+
 static _Bool native_init(engine_t *eng)
 {
     eng->handle = calloc(1, sizeof(pid_t));
@@ -88,11 +89,8 @@ static _Bool native_init(engine_t *eng)
         ERF("Could not allocate enough memory to represent an engine handle.");
 
     const uint64_t pid = fork();
-    
-    //assert(asr);
-    //asr->engine_pid = pid;
+
     eng->engine_pid = pid;
-    //eng->handle = (engine_h)pid;
 
     if (pid > 0) {
         /* Parent with child's pid.  Wait for the child. */
@@ -141,132 +139,140 @@ static _Bool native_init(engine_t *eng)
     return false; /* Error */
 }
 
-static _Bool native_shutdown(engine_t *eng) { return true; }
+static _Bool native_shutdown(engine_t *eng)
+{
+    return true;
+}
 
 static void native_execute(engine_t *eng, const ctx_t *ctx)
 {
-	//TODO: cleanup move from asrepl.c (helper functions)
-	int i, n_words, status;
-	uintptr_t pc, orig_pc;
-	pid_t ret;
-	uint8_t *insns;
-	struct user_regs_struct regs;
-	
-	/* We will restore the pc after we single step and gather registers */
-	orig_pc = asrepl_get_pc(eng->engine_pid);
-	
-	/* POKETEXT operates on word size units (round up) */
-	pc = orig_pc;
-	insns = ctx->text;
-	n_words = (ctx->length / sizeof(word_t));
-	if (ctx->length % sizeof(word_t))
-		++n_words;
-	
-	for (i=0; i<n_words; ++i) {
-		word_t word = *(word_t *)insns;
-		ptrace(PTRACE_POKETEXT, eng->engine_pid, (void *)pc, (void *)word);
-		pc    += sizeof(word_t);
-		insns += sizeof(word_t);
-	}
+    int i, n_words, status;
+    uintptr_t pc, orig_pc;
+    pid_t ret;
+    uint8_t *insns;
+    struct user_regs_struct regs;
 
-	/* Now that data is loaded at the PC of the engine, single step one insn */
-	ptrace(PTRACE_SINGLESTEP, eng->engine_pid, NULL, NULL);
-	ret = waitpid(eng->engine_pid, &status, __WALL);
-	if (ret != 0 && !WIFSTOPPED(status))
-		ERF("Error waiting for engine to single step\n");
-	
-	/* Now that we have executed the instruction, restore the pc */
-	asrepl_get_registers(eng->engine_pid, &regs);
-	regs.rip = orig_pc;
-	ptrace(PTRACE_SETREGS, eng->engine_pid, NULL, &regs);
+    /* We will restore the pc after we single step and gather registers */
+    orig_pc = get_pc(eng->engine_pid);
+
+    /* POKETEXT operates on word size units (round up) */
+    pc = orig_pc;
+    insns = ctx->text;
+    n_words = (ctx->length / sizeof(word_t));
+    if (ctx->length % sizeof(word_t))
+        ++n_words;
+
+    for (i=0; i<n_words; ++i) {
+        word_t word = *(word_t *)insns;
+        ptrace(PTRACE_POKETEXT, eng->engine_pid, (void *)pc, (void *)word);
+        pc    += sizeof(word_t);
+        insns += sizeof(word_t);
+    }
+
+    /* Now that data is loaded at the PC of the engine, single step one insn */
+    ptrace(PTRACE_SINGLESTEP, eng->engine_pid, NULL, NULL);
+    ret = waitpid(eng->engine_pid, &status, __WALL);
+    if (ret != 0 && !WIFSTOPPED(status))
+        ERF("Error waiting for engine to single step\n");
+
+    /* Now that we have executed the instruction, restore the pc */
+    get_registers(eng->engine_pid, &regs);
+    regs.rip = orig_pc;
+    ptrace(PTRACE_SETREGS, eng->engine_pid, NULL, &regs);
 }
 
 #ifdef HAVE_LIBUNICORN
 static _Bool unicorn_init(engine_t *eng)
 {
-	uc_engine *uc;
-	uc_err err;
-	uc_context *context = 0x00;
+    uc_engine *uc;
+    uc_err err;
+    uc_context *context = NULL;
 
-	//TODO: parameterize execution mode via engine_t Arch/Mode flags
-	err = uc_open(UC_ARCH_X86, UC_MODE_64, &uc);
-	if (err != UC_ERR_OK) {
-		ERR("Error opening unicorn engine [uc_open()]: %s", uc_strerror(err));
-		return false;
-	}
+    /* TODO: parameterize execution mode via engine_t Arch/Mode flags */
+    err = uc_open(UC_ARCH_X86, UC_MODE_64, &uc);
+    if (err != UC_ERR_OK) {
+        ERR("Error opening unicorn engine [uc_open()]: %s", uc_strerror(err));
+        return false;
+    }
 
-	//TODO: parametrize UC_TEXT_ADDR based upon the Arch being emulated
-	err = uc_mem_map(uc, UC_TEXT_ADDR, 2*1024*1024, UC_PROT_ALL);
-	if (err != UC_ERR_OK) {
-		ERR("Error mapping executable page [uc_mem_map()]: %s", uc_strerror(err));
-		return false;
-	}
+    /* TODO: parametrize UC_TEXT_ADDR based upon the Arch being emulated */
+    err = uc_mem_map(uc, UC_TEXT_ADDR, 2*1024*1024, UC_PROT_ALL);
+    if (err != UC_ERR_OK) {
+        ERR("Error mapping executable page [uc_mem_map()]: %s",
+            uc_strerror(err));
+        return false;
+    }
 
-	eng->handle = (engine_h)uc;
-	eng->state  = (engine_h)context;
-	return true;
+    eng->handle = (engine_h)uc;
+    eng->state  = (engine_h)context;
+    return true;
 }
 
 static _Bool unicorn_shutdown(engine_t *eng)
 {
-	uc_engine *uc = (uc_engine *)eng->handle;
-	uc_context *context = (uc_context *)eng->state;
+    uc_engine *uc = (uc_engine *)eng->handle;
+    uc_context *context = (uc_context *)eng->state;
 
-	if(!uc)
-		return false;
+    if (!uc)
+      return false;
 
-	// a Unicorn context may or may not have been allocated
-	if(context)
-		uc_free(context);
+    /* A Unicorn context may or may not have been allocated */
+    if (context)
+      uc_free(context);
 
-	uc_close(uc);
-	return true;
+    uc_close(uc);
+    return true;
 }
 
 void unicorn_execute(engine_t *eng, const ctx_t *ctx)
 {
-	uc_engine *uc = (uc_engine *)eng->handle;
-	uc_err err;
-	uc_context *context = (uc_context*)eng->state;
-	
-	err = uc_mem_write(uc, UC_TEXT_ADDR, ctx->text, ctx->length);
-	if (err != UC_ERR_OK) {
-		ERR("Failed to write ops to execution memory [uc_mem_write()]: %s", uc_strerror(err));
-		return;
-	}
+    uc_err err;
+    uc_engine *uc = (uc_engine *)eng->handle;
+    uc_context *context = (uc_context*)eng->state;
 
-	if(context){
-		err = uc_context_restore(uc, context);
-		if (err != UC_ERR_OK) {
-			ERR("Failed to restore unicorn execution context [uc_context_restore()]: %s",
-					uc_strerror(err));
-			return;
-		}
-	}else{
-		err = uc_context_alloc(uc, &context);
-		if (err != UC_ERR_OK) {
-			ERR("Failed to allocat Unicorn context struct [uc_context_alloc()]: %s",
-					uc_strerror(err));
-			return;
-		}
-		eng->state = (engine_h)context;
-	}
+    err = uc_mem_write(uc, UC_TEXT_ADDR, ctx->text, ctx->length);
+    if (err != UC_ERR_OK) {
+        ERR("Failed to write ops to execution memory [uc_mem_write()]: %s",
+            uc_strerror(err));
+        return;
+    }
 
-	err = uc_emu_start(uc, UC_TEXT_ADDR, UC_TEXT_ADDR+ctx->length, 0, 0);
-	if (err) {
-		ERR("Failed to start emulation [uc_emu_start()]: %s", uc_strerror(err));
-		return;
-	}
+    /* Use the existing uc state, or allocate a fresh one. */
+    if (context) {
+        err = uc_context_restore(uc, context);
+        if (err != UC_ERR_OK) {
+            ERR("Failed to restore unicorn execution "
+                "context [uc_context_restore()]: %s",
+                uc_strerror(err));
+            return;
+        }
+    } 
+    else {
+        err = uc_context_alloc(uc, &context);
+        if (err != UC_ERR_OK) {
+            ERR("Failed to allocat Unicorn context "
+                "struct [uc_context_alloc()]: %s",
+                uc_strerror(err));
+            return;
+        }
+        eng->state = (engine_h)context;
+    }
 
-	err = uc_context_save(uc, context);
-	if (err != UC_ERR_OK) {
-		ERR("Failed to save the unicorn context [uc_context_save()]: %s", uc_strerror(err));
-		return;
-	}
+    err = uc_emu_start(uc, UC_TEXT_ADDR, UC_TEXT_ADDR+ctx->length, 0, 0);
+    if (err) {
+        ERR("Failed to start emulation [uc_emu_start()]: %s", uc_strerror(err));
+        return;
+    }
+
+    err = uc_context_save(uc, context);
+    if (err != UC_ERR_OK) {
+        ERR("Failed to save the unicorn context [uc_context_save()]: %s", uc_strerror(err));
+        return;
+    }
 
 }
 
-void unicorn_dump_registers(engine_t *eng)
+static void unicorn_dump_registers(engine_t *eng)
 {
     struct user_regs_struct regs;
 
@@ -326,41 +332,43 @@ void unicorn_dump_registers(engine_t *eng)
 
 static const engine_desc_t engines[] =
 {
-	[ENGINE_NATIVE]  = {native_init,  native_shutdown,  native_execute,  native_dump_registers},
+    [ENGINE_NATIVE]  = {native_init,    native_shutdown,
+                        native_execute, native_dump_registers},
 #ifdef HAVE_LIBUNICORN
-	[ENGINE_UNICORN] = {unicorn_init, unicorn_shutdown, unicorn_execute, unicorn_dump_registers}
+    [ENGINE_UNICORN] = {unicorn_init, unicorn_shutdown,
+                        unicorn_execute, unicorn_dump_registers}
 #endif
 };
 
 engine_t *engine_init(engine_e type)
 {
-	engine_t *eng = calloc(1, sizeof(engine_t));
-	if (!eng)
-		ERF("Could not allocate enough memory to represent an engine.");
+    engine_t *eng = calloc(1, sizeof(engine_t));
+    if (!eng)
+      ERF("Could not allocate enough memory to represent an engine.");
 
-	/* Handle descriptions */
-	if (type == ENGINE_INVALID || type >= ENGINE_MAX)
-		ERF("Invalid engine type: %d", (int)type);
+    /* Handle descriptions */
+    if (type == ENGINE_INVALID || type >= ENGINE_MAX)
+      ERF("Invalid engine type: %d", (int)type);
 
-	eng->type  = type;
-	eng->desc  = &engines[type];
-	eng->state = 0x00;
+    eng->type  = type;
+    eng->desc  = &engines[type];
+    eng->state = NULL;
 
-	/* Initialize the engine */
-	if (eng->desc->init(eng) == false)
-		ERF("Error initializing the engine.");
+    /* Initialize the engine */
+    if (eng->desc->init(eng) == false)
+      ERF("Error initializing the engine.");
 
-	return eng;
+    return eng;
 }
 
 void engine_execute(engine_t *eng, const ctx_t *ctx)
 {
-	assert(eng && eng->desc);
-	return eng->desc->execute(eng, ctx);
+    assert(eng && eng->desc);
+    return eng->desc->execute(eng, ctx);
 }
 
 void engine_dump_registers(engine_t *eng)
 {
-	assert(eng && eng->desc);
-	return eng->desc->dump_registers(eng);
+    assert(eng && eng->desc);
+    return eng->desc->dump_registers(eng);
 }

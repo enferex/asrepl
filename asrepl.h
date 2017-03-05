@@ -85,10 +85,6 @@ extern char *prompt;
 extern void asrepl_update_prompt(const char *new_prompt);
 extern void asrepl_version(void);
 
-/* Accessors */
-extern uintptr_t asrepl_get_pc(pid_t pid);
-extern void asrepl_get_registers(pid_t pid, struct user_regs_struct *regs);
-
 /* Print register values to stdout */
 extern void asrepl_dump_registers(asrepl_t *asr);
 

@@ -93,7 +93,6 @@ void asrepl_version(void)
     printf("%s v%d.%d, (c)%d\n", NAME, MAJOR, MINOR, YEAR);
 }
 
-<<<<<<< HEAD
 void asrepl_update_prompt(const char *new_prompt)
 {
     if (strnlen(new_prompt, MAX_PROMPT_LENGTH) >= MAX_PROMPT_LENGTH)

@@ -14,7 +14,7 @@ AC_PROG_CC
 # Checks for libraries.
 AC_CHECK_LIB([readline], [readline])
 AC_CHECK_LIB([keystone], [ks_asm])
-AC_CHECK_LIB([unicorn], [uc_version])
+AC_CHECK_LIB([unicorn],  [uc_context_restore])
 
 # Checks for header files.
 AC_CHECK_HEADERS([stdint.h stdlib.h string.h unistd.h])
