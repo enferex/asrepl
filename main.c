@@ -52,10 +52,10 @@ static void usage(const char *execname)
 {
     printf("Usage: %s [-h] [-v] "
 #ifdef HAVE_LIBKEYSTONE
-           "[-k]"
+           "[-k] "
 #endif
 #ifdef HAVE_LIBUNICORN
-           "[-u]"
+           "[-u] "
 #endif
            "\n"
            " -h: This help message.\n"
