@@ -54,11 +54,17 @@ static void usage(const char *execname)
 #ifdef HAVE_LIBKEYSTONE
            "[-k]"
 #endif
+#ifdef HAVE_LIBUNICORN
+           "[-u]"
+#endif
            "\n"
            " -h: This help message.\n"
            " -v: Version information.\n"
 #ifdef HAVE_LIBKEYSTONE
            " -k: Use the Keystone assembler.\n"
+#endif
+#ifdef HAVE_LIBKEYSTONE
+           " -u: Use the Unicorn execution engine.\n"
 #endif
            , execname);
 
@@ -75,14 +81,15 @@ int main(int argc, char **argv)
     /* Setup defaults for command line args */
     assembler_type = ASSEMBLER_GNU_AS_X8664;
     engine_type    = ENGINE_NATIVE;
-    while ((opt = getopt(argc, argv, "hkv")) != -1) {
+    while ((opt = getopt(argc, argv, "hkuv")) != -1) {
     switch (opt) {
         case 'h': usage(argv[0]);   exit(EXIT_SUCCESS);
         case 'v': asrepl_version(); exit(EXIT_SUCCESS);
-#ifdef HAVE_LIBKEYSTONE
 #ifdef HAVE_LIBUNICORN
-        case 'k': assembler_type = ASSEMBLER_KEYSTONE; engine_type = ENGINE_UNICORN; break;
+        case 'k': assembler_type = ASSEMBLER_KEYSTONE; break;
 #endif
+#ifdef HAVE_LIBKEYSTONE
+        case 'u': engine_type = ENGINE_UNICORN; break;
 #endif
         default: break;
         }
