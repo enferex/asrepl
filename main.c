@@ -117,7 +117,7 @@ int main(int argc, char **argv)
 
         /* Do the real work */
         if (!(ctx = asrepl_new_ctx(line)))
-          ERF("Error allocating a new context.");
+          continue;
         asm_result = asrepl_assemble(asr, line, ctx);
         
         /* The assembly was generated correctly, execute it.

@@ -66,16 +66,19 @@ ctx_t *asrepl_new_ctx(const char *asm_line)
     ctx_t *ctx;
     const size_t len = strnlen(asm_line, MAX_ASM_LINE);
 
-    if (len == 0 || len == MAX_ASM_LINE) {
-        ERR("Invalid asm statement or command.");
+    if (len == 0)
+      return NULL;
+    
+    if (len == MAX_ASM_LINE) {
+        ERR("Input line is too long.");
         return NULL;
     }
 
-   if (!(ctx = calloc(1, sizeof(ctx_t))))
-     return NULL;
+    if (!(ctx = calloc(1, sizeof(ctx_t))))
+      ERF("Error allocating a new context.");
 
-   if (!(ctx->asm_line = strdup(asm_line)))
-     return NULL;
+    if (!(ctx->asm_line = strdup(asm_line)))
+      ERF("Error allocating a context description.");
 
    return ctx;
 }
