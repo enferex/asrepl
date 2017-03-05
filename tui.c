@@ -82,6 +82,12 @@ void tui_init(void)
     tui_update();
 }
 
+char *tui_readline(const char *prompt)
+{
+    char buffer[MAX_COMMAND+1] = {0};
+    mvwgetstr(buffer
+}
+
 void tui_update(void)
 {
     update_panels();

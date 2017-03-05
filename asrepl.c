@@ -51,6 +51,8 @@ asrepl_t *asrepl_init(assembler_e assembler_type, engine_e engine_type)
     if (!asr)
       ERF("Error allocating memory for the asrepl handle.");
 
+    asr->mode = MODE_NORMAL;
+
     /* Choose and initialize the assembler */
     if (!(asr->assembler = assembler_init(assembler_type)))
       ERF("Error locating an assembler to use.");
@@ -267,7 +269,7 @@ void asrepl_macro_begin(asrepl_t *asr, const char *name)
 
     macro->next = asr->macros;
     asr->macros = macro;
-    asr->mode = MODE_MACRO;
+    asr->mode |= MODE_MACRO;
     asr->active_macro = macro;
 }
 
@@ -279,6 +281,7 @@ void asrepl_macro_end(asrepl_t *asr)
 
     /* Update the prompt */
     asrepl_update_prompt(DEFAULT_PROMPT);
+    asr->mode &= ~MODE_MACRO;
 }
 
 void asrepl_macro_add_ctx(asrepl_t *asr, ctx_t *ctx)

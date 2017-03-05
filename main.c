@@ -70,6 +70,19 @@ static void usage(const char *execname)
 
 }
 
+char *read_line(asrepl_t *asr, const char *prompt)
+{
+    assert(asr);
+#ifdef HAVE_LIBNCURSES
+    if (asr->mode & MODE_TUI)
+      tui_readline(prompt);
+    else
+      return readline(prompt);
+#else
+    return readline(prompt);
+#endif
+}
+
 int main(int argc, char **argv)
 {
     int opt;

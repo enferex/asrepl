@@ -90,16 +90,15 @@ typedef struct _assembler_t
  * and will/might be played back later.
  *
  * Macros are named see the command '/def' and '/end' in 
- * asrepl_commands.c.
+ * asrepl_commands.c.  The modes below are maskable.
  *
  * Macro:  Macro mode.
  * Normal: Not-macro mode.  The instructions are not collected.
  */
-typedef enum _mode_e
-{
-    MODE_NORMAL = 0,
-    MODE_MACRO
-} mode_e;
+typedef short mode_e;
+#define MODE_NORMAL 0x01
+#define MODE_MACRO  0x02
+#define MODE_TUI    0x04
 
 /* Engine is responsible for execution of raw machine code, either natively or via emulation */
 typedef enum

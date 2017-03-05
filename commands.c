@@ -200,10 +200,14 @@ static void cmd_tui(asrepl_t *asr, const repl_cmd_t *cmd, const void *unused)
 #else
     static _Bool enabled = false;
     enabled ^= true;
-    if (enabled)
-      tui_init();
-    else
-      tui_exit();
+    if (enabled) {
+        asr->mode |= MODE_TUI;
+        tui_init();
+    }
+    else {
+        asr->mode &= ~MODE_TUI;
+        tui_exit();
+    }
 #endif
 }
 
