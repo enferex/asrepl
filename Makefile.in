@@ -2,7 +2,7 @@ APP       = asrepl
 CC        = @CC@
 CFLAGS    = @CFLAGS@ -Wall -DASSEMBLER=\"$(AS)\"
 LDFLAGS   = @LIBS@ @LDFLAGS@
-SRCS      = main.c asrepl_commands.c asrepl.c assembler.c engine.c
+SRCS      = main.c commands.c asrepl.c assembler.c engine.c
 OBJS      = $(SRCS:.c=.o)
 
 all: $(APP)

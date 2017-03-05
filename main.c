@@ -42,7 +42,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "asrepl.h"
-#include "asrepl_commands.h"
+#include "commands.h"
 #include "assembler.h"
 #include "engine.h"
 #include "config.h"

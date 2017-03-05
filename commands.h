@@ -30,8 +30,8 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
-#ifndef __ASREPL_COMMANDS_H
-#define __ASREPL_COMMANDS_H
+#ifndef __COMMANDS_H
+#define __COMMANDS_H
 
 /* REPL command processing status */
 typedef enum _cmd_status_e
@@ -51,4 +51,4 @@ typedef enum _cmd_status_e
  */
 extern cmd_status_e asrepl_cmd_process(asrepl_t *asrepl, const char *line);
 
-#endif /* __ASREPL_COMMANDS_H */
+#endif /* __COMMANDS_H */

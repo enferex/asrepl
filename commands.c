@@ -36,7 +36,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "asrepl.h"
-#include "asrepl_commands.h"
+#include "commands.h"
 
 /* REPL commands beginning with a leading '/' are considered prefix,
  * else they are not prefixed.  The reason for the two command types
