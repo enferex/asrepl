@@ -42,6 +42,7 @@ Dependencies
 2. x86-64 bit architecture.
 3. An assembler, ideally GNU as: https://www.gnu.org/software/binutils/
 3. I've only tested this on Linux.
+4. Optional: Keystone and Unicorn Engine
 
 Contact
 -------
