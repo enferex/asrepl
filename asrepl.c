@@ -41,18 +41,60 @@
 #include "assembler.h"
 #include "engine.h"
 
-asrepl_t *asrepl_init(assembler_e assembler_type, engine_e engine_type)
+#ifdef HAVE_LIBUNICORN
+#include <unicorn/unicorn.h>
+#endif
+
+asrepl_t *asrepl_init(char *marchval, assembler_e assembler_type, engine_e engine_type)
 {
     asrepl_t *asr = calloc(1, sizeof(asrepl_t));
 
     if (!asr)
       ERF("Error allocating memory for the asrepl handle.");
 
+#ifdef HAVE_LIBUNICORN
+    // parse out marchval and assign to asr struct if Unicorn toggled on
+    if(engine_type == ENGINE_UNICORN){
+    	/* ARM */
+    	if(strcasecmp(marchval,"arm") == 0 ||strcasecmp(marchval,"armel") == 0)
+    	{
+		    asr->march = UC_ARCH_ARM;
+		    asr->mmode = UC_MODE_ARM || UC_MODE_LITTLE_ENDIAN;
+	}
+
+	if(strcasecmp(marchval,"armhf") == 0)
+	{
+		    asr->march = UC_ARCH_ARM;
+		    asr->mmode = UC_MODE_ARM || UC_MODE_BIG_ENDIAN;
+	}
+
+    	if(strcasecmp(marchval,"arm64") == 0 ||strcasecmp(marchval,"aarch64") == 0)
+    	{
+		    asr->march = UC_ARCH_ARM64;
+		    asr->mmode = UC_MODE_ARM;
+    	}
+
+    	/* x86 */
+    	if(strcasecmp(marchval,"x86") == 0)
+    	{
+		    asr->march = UC_ARCH_X86;
+		    asr->mmode = UC_MODE_32;
+    	}
+
+    	/* x86-64 */
+    	if(strcasecmp(marchval,"x86-64") == 0)
+    	{
+		    asr->march = UC_ARCH_X86;
+		    asr->mmode = UC_MODE_64;
+    	}
+    }
+#endif
+
     /* Choose and initialize the assembler */
-    if (!(asr->assembler = assembler_init(assembler_type)))
+    if (!(asr->assembler = assembler_init(asr,assembler_type)))
       ERF("Error locating an assembler to use.");
 
-    if (!(asr->engine = engine_init(engine_type)))
+    if (!(asr->engine = engine_init(asr,engine_type)))
       ERF("Error locating an engine to use.");
 
     return asr;
@@ -93,7 +135,7 @@ void asrepl_version(void)
 void asrepl_dump_registers(asrepl_t *asr)
 {
     assert(asr);
-    return engine_dump_registers(asr->engine);
+    return engine_dump_registers(asr);
 }
 
 /* Call the assembler to assemble this */

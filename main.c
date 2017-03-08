@@ -68,6 +68,7 @@ int main(int argc, char **argv)
 {
     int opt;
     char *line;
+    char *marchval;
     assembler_e assembler_type;
     engine_e engine_type;
     asrepl_t *asr;
@@ -75,13 +76,17 @@ int main(int argc, char **argv)
     /* Setup defaults for command line args */
     assembler_type = ASSEMBLER_GNU_AS_X8664;
     engine_type    = ENGINE_NATIVE;
-    while ((opt = getopt(argc, argv, "hkv")) != -1) {
+    while ((opt = getopt(argc, argv, "hk:v")) != -1) {
     switch (opt) {
         case 'h': usage(argv[0]);   exit(EXIT_SUCCESS);
         case 'v': asrepl_version(); exit(EXIT_SUCCESS);
 #ifdef HAVE_LIBKEYSTONE
 #ifdef HAVE_LIBUNICORN
-        case 'k': assembler_type = ASSEMBLER_KEYSTONE; engine_type = ENGINE_UNICORN; break;
+        case 'k':
+		  assembler_type = ASSEMBLER_KEYSTONE;
+		  engine_type = ENGINE_UNICORN;
+		  marchval = optarg;
+		  break;
 #endif
 #endif
         default: break;
@@ -92,7 +97,7 @@ int main(int argc, char **argv)
     ERF("Sorry, %s only operates on x86-64 architectures.", NAME);
 #endif
     /* Create a state object for this instance of asrepl */
-    if (!(asr = asrepl_init(assembler_type, engine_type)))
+    if (!(asr = asrepl_init(marchval, assembler_type, engine_type)))
       ERF("Error initializing a new asrepl instance.");
 
     /* Engine has started, now query user for asm code */

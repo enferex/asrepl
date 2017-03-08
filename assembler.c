@@ -71,7 +71,7 @@ typedef struct _assembler_desc_t
     const char *flags;
 
     /* True: success, False: failure */
-    _Bool (*init)(assembler_t     *as); /* Initialize assembler */
+    _Bool (*init)(asrepl_t *asr, assembler_t *as); /* Initialize assembler */
     _Bool (*shutdown)(assembler_t *as); /* Stop and cleanup     */
 
     /* 'line' is the user-supplied assembly string. */
@@ -193,12 +193,12 @@ static _Bool gnu_assemble(assembler_t *as, const char *line, ctx_t *ctx)
 }
 
 #ifdef HAVE_LIBKEYSTONE
-static _Bool keystone_init(assembler_t *as)
+static _Bool keystone_init(asrepl_t *asr, assembler_t *as)
 {
     ks_engine *ks;
     ks_err err;
 
-    err = ks_open(ARCH,MODE,&ks);
+    err = ks_open(asr->march,asr->mmode,&ks);
     if(err != KS_ERR_OK)
       return false;
 
@@ -257,7 +257,7 @@ static _Bool keystone_assemble(
 #endif /* HAVE_LIBKEYSTONE */
 
 /* Always true predicates (for convenience) */
-static _Bool yes_init(assembler_t     *unused) { return true; }
+static _Bool yes_init(asrepl_t *asr, assembler_t *unused) { return true; }
 static _Bool yes_shutdown(assembler_t *unused) { return true; }
 
 /* Array of all assemblers that we support */
@@ -270,7 +270,7 @@ static const assembler_desc_t assemblers[] =
 #endif
 };
 
-assembler_t *assembler_init(assembler_e type)
+assembler_t *assembler_init(asrepl_t *asr, assembler_e type)
 {
     assembler_t *as = calloc(1, sizeof(assembler_t));
     if (!as)
@@ -284,7 +284,7 @@ assembler_t *assembler_init(assembler_e type)
     as->desc = &assemblers[type];
     
     /* Initialize the assembler */
-    if (as->desc->init(as) == false)
+    if (as->desc->init(asr,as) == false)
       ERF("Error initializing assembler.");
 
     return as;

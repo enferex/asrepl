@@ -37,6 +37,11 @@
 #include <sys/types.h>
 #include "config.h"
 
+#ifdef HAVE_LIBUNICORN
+#include <unicorn/unicorn.h>
+#endif
+
+
 /* The machine code */
 typedef struct _context_t
 {
@@ -132,6 +137,10 @@ typedef struct _asrepl_t
     macro_t     *macros;
     macro_t     *active_macro; /* The macro in macros being used. */
     //pid_t        engine_pid;
+#ifdef HAVE_LIBUNICORN
+    uc_arch	march;
+    uc_mode	mmode;
+#endif
 } asrepl_t;
 
 #endif /* __ASREPL_TYPES_H */

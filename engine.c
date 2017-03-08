@@ -17,6 +17,9 @@
 #define REG64(_regs, _reg) \
     printf("%s\t 0x%llx\n", #_reg, (_regs)->_reg)
 
+#define REG32(_regs, _reg) \
+    printf("%s\t 0x%zx\n", _regs, (uint32_t)_reg)
+
 #ifdef HAVE_LIBUNICORN
 #include <unicorn/unicorn.h>
 #define UC_TEXT_ADDR 0x10000000
@@ -24,13 +27,13 @@
 
 typedef struct _engine_desc_t
 {
-	_Bool (*init)(engine_t		*eng);
-	_Bool (*shutdown)(engine_t	*eng);
+	_Bool (*init)(asrepl_t *asr, engine_t *eng);
+	_Bool (*shutdown)(engine_t *eng);
 
 	//_Bool (*update)(engine_t *eng, const char *instructions, size_t length);
 	//void (*execute)(engine_t *eng, size_t length, size_t count);
 	void (*execute)(engine_t *eng, const ctx_t *ctx);
-	void (*dump_registers)(engine_t *eng);
+	void (*dump_registers)(asrepl_t *asr);
 } engine_desc_t;
 
 void asrepl_get_registers(pid_t pid, struct user_regs_struct *gpregs)
@@ -46,8 +49,9 @@ uintptr_t asrepl_get_pc(pid_t pid)
     return gpregs.rip;
 }
 
-void native_dump_registers(engine_t *eng)
+void native_dump_registers(asrepl_t *asr)
 {
+    engine_t *eng = asr->engine;
     pid_t pid = eng->engine_pid;
     struct user_regs_struct regs;
 
@@ -81,7 +85,7 @@ void native_dump_registers(engine_t *eng)
     REG64(&regs, gs_base);
 /*    REG64(&regs, orig_rax); */
 }
-static _Bool native_init(engine_t *eng)
+static _Bool native_init(asrepl_t *asr, engine_t *eng)
 {
     eng->handle = calloc(1, sizeof(pid_t));
     if (!eng->handle)
@@ -182,14 +186,14 @@ static void native_execute(engine_t *eng, const ctx_t *ctx)
 }
 
 #ifdef HAVE_LIBUNICORN
-static _Bool unicorn_init(engine_t *eng)
+static _Bool unicorn_init(asrepl_t *asr, engine_t *eng)
 {
 	uc_engine *uc;
 	uc_err err;
 	uc_context *context = 0x00;
 
 	//TODO: parameterize execution mode via engine_t Arch/Mode flags
-	err = uc_open(UC_ARCH_X86, UC_MODE_64, &uc);
+	err = uc_open(asr->march, asr->mmode, &uc);
 	if (err != UC_ERR_OK) {
 		ERR("Error opening unicorn engine [uc_open()]: %s", uc_strerror(err));
 		return false;
@@ -266,7 +270,107 @@ void unicorn_execute(engine_t *eng, const ctx_t *ctx)
 
 }
 
-void unicorn_dump_registers(engine_t *eng)
+void unicorn_dump_registers(asrepl_t *asr)
+{
+	assert(asr);
+	/* x86-64 */
+	if(asr->march == UC_ARCH_X86 && asr->mmode == UC_MODE_64)
+		unicorn_dump_registers_x86_64(asr->engine);
+	else if(asr->march == UC_ARCH_X86 && asr->mmode == UC_MODE_32)
+		unicorn_dump_registers_x86_32(asr->engine);
+	else if(asr->march == UC_ARCH_ARM)
+		unicorn_dump_registers_arm(asr->engine);
+}
+
+void unicorn_dump_registers_arm(engine_t *eng)
+{
+	uint32_t cpsr, sp, lr, pc;
+	uint32_t r0, r1, r2, r3;
+	uint32_t r4, r5, r6, r7;
+	uint32_t r8, r9, r10, r11;
+	uint32_t r12;
+
+	uc_reg_read(eng->handle, UC_ARM_REG_CPSR, &cpsr);
+	uc_reg_read(eng->handle, UC_ARM_REG_PC, &pc);
+	uc_reg_read(eng->handle, UC_ARM_REG_SP, &sp);
+	uc_reg_read(eng->handle, UC_ARM_REG_LR, &lr);
+	uc_reg_read(eng->handle, UC_ARM_REG_R0, &r0);
+	uc_reg_read(eng->handle, UC_ARM_REG_R1, &r1);
+	uc_reg_read(eng->handle, UC_ARM_REG_R2, &r2);
+	uc_reg_read(eng->handle, UC_ARM_REG_R3, &r3);
+	uc_reg_read(eng->handle, UC_ARM_REG_R4, &r4);
+	uc_reg_read(eng->handle, UC_ARM_REG_R5, &r5);
+	uc_reg_read(eng->handle, UC_ARM_REG_R6, &r6);
+	uc_reg_read(eng->handle, UC_ARM_REG_R7, &r7);
+	uc_reg_read(eng->handle, UC_ARM_REG_R8, &r8);
+	uc_reg_read(eng->handle, UC_ARM_REG_R9, &r9);
+	uc_reg_read(eng->handle, UC_ARM_REG_R10, &r10);
+	uc_reg_read(eng->handle, UC_ARM_REG_R11, &r11);
+	uc_reg_read(eng->handle, UC_ARM_REG_R12, &r12);
+
+
+	REG32("cpsr", cpsr);
+	REG32("pc", pc);
+	REG32("sp", sp);
+	REG32("lr", lr);
+	REG32("r0", r0);
+	REG32("r1", r1);
+	REG32("r2", r2);
+	REG32("r3", r3);
+	REG32("r4", r4);
+	REG32("r5", r5);
+	REG32("r6", r6);
+	REG32("r7", r7);
+	REG32("r8", r8);
+	REG32("r9", r9);
+	REG32("r10", r10);
+	REG32("r11", r11);
+	REG32("r12", r12);
+}
+
+void unicorn_dump_registers_x86_32(engine_t *eng)
+{
+	uint32_t eflags, eip, cs, ds;
+	uint32_t es, fs, gs, ss;
+	uint32_t ebp, esp, eax, ebx;
+	uint32_t ecx, edx, edi, esi;
+
+	uc_reg_read(eng->handle, UC_X86_REG_EFLAGS, &eflags);
+	uc_reg_read(eng->handle, UC_X86_REG_EIP, &eip);
+	uc_reg_read(eng->handle, UC_X86_REG_CS, &cs);
+	uc_reg_read(eng->handle, UC_X86_REG_DS, &ds);
+	uc_reg_read(eng->handle, UC_X86_REG_ES, &es);
+	uc_reg_read(eng->handle, UC_X86_REG_FS, &fs);
+	uc_reg_read(eng->handle, UC_X86_REG_GS, &gs);
+	uc_reg_read(eng->handle, UC_X86_REG_SS, &ss);
+	uc_reg_read(eng->handle, UC_X86_REG_EBP, &ebp);
+	uc_reg_read(eng->handle, UC_X86_REG_ESP, &esp);
+	uc_reg_read(eng->handle, UC_X86_REG_EAX, &eax);
+	uc_reg_read(eng->handle, UC_X86_REG_EBX, &ebx);
+	uc_reg_read(eng->handle, UC_X86_REG_ECX, &ecx);
+	uc_reg_read(eng->handle, UC_X86_REG_EDX, &edx);
+	uc_reg_read(eng->handle, UC_X86_REG_EDI, &edi);
+	uc_reg_read(eng->handle, UC_X86_REG_ESI, &esi);
+
+	REG32("eflags", eflags);
+	REG32("eip", eip);
+	REG32("cs", cs);
+	REG32("ds", ds);
+	REG32("es", es);
+	REG32("fs", fs);
+	REG32("gs", gs);
+	REG32("ss", ss);
+	REG32("ebp", ebp);
+	REG32("esp", esp);
+	REG32("eax", eax);
+	REG32("ebx", ebx);
+	REG32("ecx", ecx);
+	REG32("edx", edx);
+	REG32("edi", edi);
+	REG32("esi", esi);
+}
+
+void unicorn_dump_registers_x86_64(engine_t *eng)
 {
     struct user_regs_struct regs;
 
@@ -332,7 +436,7 @@ static const engine_desc_t engines[] =
 #endif
 };
 
-engine_t *engine_init(engine_e type)
+engine_t *engine_init(asrepl_t *asr, engine_e type)
 {
 	engine_t *eng = calloc(1, sizeof(engine_t));
 	if (!eng)
@@ -347,7 +451,7 @@ engine_t *engine_init(engine_e type)
 	eng->state = 0x00;
 
 	/* Initialize the engine */
-	if (eng->desc->init(eng) == false)
+	if (eng->desc->init(asr,eng) == false)
 		ERF("Error initializing the engine.");
 
 	return eng;
@@ -359,8 +463,8 @@ void engine_execute(engine_t *eng, const ctx_t *ctx)
 	return eng->desc->execute(eng, ctx);
 }
 
-void engine_dump_registers(engine_t *eng)
+void engine_dump_registers(asrepl_t *asr)
 {
-	assert(eng && eng->desc);
-	return eng->desc->dump_registers(eng);
+	assert(asr && asr->engine && asr->engine->desc);
+	return asr->engine->desc->dump_registers(asr);
 }

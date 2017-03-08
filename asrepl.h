@@ -73,7 +73,7 @@
 /* Ptrace operates on word size thingies */
 typedef unsigned long word_t;
 
-extern asrepl_t *asrepl_init(assembler_e type, engine_e engine);
+extern asrepl_t *asrepl_init(char *marchval, assembler_e type, engine_e engine);
 extern void asrepl_version(void);
 
 /* Accessors */
