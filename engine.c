@@ -276,10 +276,15 @@ void unicorn_dump_registers(asrepl_t *asr)
 	/* x86-64 */
 	if(asr->march == UC_ARCH_X86 && asr->mmode == UC_MODE_64)
 		unicorn_dump_registers_x86_64(asr->engine);
+	/* x86 */
 	else if(asr->march == UC_ARCH_X86 && asr->mmode == UC_MODE_32)
 		unicorn_dump_registers_x86_32(asr->engine);
+	/* arm */
 	else if(asr->march == UC_ARCH_ARM)
 		unicorn_dump_registers_arm(asr->engine);
+	/* mips32 */
+	else if(asr->march == UC_ARCH_MIPS)
+		unicorn_dump_registers_mips(asr->engine);
 }
 
 void unicorn_dump_registers_arm(engine_t *eng)
@@ -326,6 +331,92 @@ void unicorn_dump_registers_arm(engine_t *eng)
 	REG32("r10", r10);
 	REG32("r11", r11);
 	REG32("r12", r12);
+}
+
+void unicorn_dump_registers_mips(engine_t *eng)
+{
+	uint32_t gp, sp, fp, ra;
+	uint32_t zero, at, v0, v1;
+	uint32_t a0, a1, a2, a3;
+	uint32_t t0, t1, t2, t3, t4, t5, t6, t7;
+	uint32_t s0, s1, s2, s3, s4, s5, s6, s7;
+	uint32_t t8, t9, k0, k1;
+
+	uc_reg_read(eng->handle, UC_MIPS_REG_GP, &gp);
+	uc_reg_read(eng->handle, UC_MIPS_REG_SP, &sp);
+	uc_reg_read(eng->handle, UC_MIPS_REG_FP, &fp);
+	uc_reg_read(eng->handle, UC_MIPS_REG_RA, &ra);
+
+	uc_reg_read(eng->handle, UC_MIPS_REG_ZERO, &zero);
+	uc_reg_read(eng->handle, UC_MIPS_REG_AT, &at);
+	uc_reg_read(eng->handle, UC_MIPS_REG_V0, &v0);
+	uc_reg_read(eng->handle, UC_MIPS_REG_V1, &v1);
+
+	uc_reg_read(eng->handle, UC_MIPS_REG_A0, &a0);
+	uc_reg_read(eng->handle, UC_MIPS_REG_A1, &a1);
+	uc_reg_read(eng->handle, UC_MIPS_REG_A2, &a2);
+	uc_reg_read(eng->handle, UC_MIPS_REG_A3, &a3);
+
+	uc_reg_read(eng->handle, UC_MIPS_REG_T0, &t0);
+	uc_reg_read(eng->handle, UC_MIPS_REG_T1, &t1);
+	uc_reg_read(eng->handle, UC_MIPS_REG_T2, &t2);
+	uc_reg_read(eng->handle, UC_MIPS_REG_T3, &t3);
+	uc_reg_read(eng->handle, UC_MIPS_REG_T4, &t4);
+	uc_reg_read(eng->handle, UC_MIPS_REG_T5, &t5);
+	uc_reg_read(eng->handle, UC_MIPS_REG_T6, &t6);
+	uc_reg_read(eng->handle, UC_MIPS_REG_T7, &t7);
+	uc_reg_read(eng->handle, UC_MIPS_REG_T8, &t8);
+	uc_reg_read(eng->handle, UC_MIPS_REG_T9, &t9);
+
+	uc_reg_read(eng->handle, UC_MIPS_REG_S0, &s0);
+	uc_reg_read(eng->handle, UC_MIPS_REG_S1, &s1);
+	uc_reg_read(eng->handle, UC_MIPS_REG_S2, &s2);
+	uc_reg_read(eng->handle, UC_MIPS_REG_S3, &s3);
+	uc_reg_read(eng->handle, UC_MIPS_REG_S4, &s4);
+	uc_reg_read(eng->handle, UC_MIPS_REG_S5, &s5);
+	uc_reg_read(eng->handle, UC_MIPS_REG_S6, &s6);
+	uc_reg_read(eng->handle, UC_MIPS_REG_S7, &s7);
+
+	uc_reg_read(eng->handle, UC_MIPS_REG_K0, &k0);
+	uc_reg_read(eng->handle, UC_MIPS_REG_K1, &k1);
+
+	REG32("gp", gp);
+	REG32("sp", sp);
+	REG32("fp", fp);
+	REG32("ra", ra);
+
+	REG32("zero", zero);
+	REG32("at", at);
+	REG32("v0", v0);
+	REG32("v1", v1);
+
+	REG32("a0", a0);
+	REG32("a1", a1);
+	REG32("a2", a2);
+	REG32("a3", a3);
+
+	REG32("t0", t0);
+	REG32("t1", t1);
+	REG32("t2", t2);
+	REG32("t3", t3);
+	REG32("t4", t4);
+	REG32("t5", t5);
+	REG32("t6", t6);
+	REG32("t7", t7);
+	REG32("t8", t8);
+	REG32("t9", t9);
+
+	REG32("s0", s0);
+	REG32("s1", s1);
+	REG32("s2", s2);
+	REG32("s3", s3);
+	REG32("s4", s4);
+	REG32("s5", s5);
+	REG32("s6", s6);
+	REG32("s7", s7);
+
+	REG32("k0", k0);
+	REG32("k1", k1);
 }
 
 void unicorn_dump_registers_x86_32(engine_t *eng)

@@ -87,6 +87,13 @@ asrepl_t *asrepl_init(char *marchval, assembler_e assembler_type, engine_e engin
 		    asr->march = UC_ARCH_X86;
 		    asr->mmode = UC_MODE_64;
     	}
+
+	/* mips */
+	if(strcasecmp(marchval,"mips") == 0 || strcasecmp(marchval,"mips32") == 0)
+	{
+		asr->march = UC_ARCH_MIPS;
+		asr->mmode = UC_MODE_MIPS32;
+	}
     }
 #endif
 
