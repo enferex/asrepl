@@ -3083,6 +3083,7 @@ _ACEOF
 fi
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for uc_context_alloc in -lunicorn" >&5
 $as_echo_n "checking for uc_context_alloc in -lunicorn... " >&6; }
 if ${ac_cv_lib_unicorn_uc_context_alloc+:} false; then :
@@ -3168,6 +3169,8 @@ if test "x$ac_cv_lib_unicorn_uc_context_alloc" = xyes; then :
   LIBS+=-lpthread
 fi
 
+=======
+>>>>>>> cf074d568c54998cb8412c3e2fe908d5f6c22697
 =======
 >>>>>>> cf074d568c54998cb8412c3e2fe908d5f6c22697
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for initscr in -lncurses" >&5

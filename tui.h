@@ -44,5 +44,5 @@ extern void tui_exit(void); /* Stop/shutdown the TUI */
 /* The returned string is from strdup, call free() when done. */
 extern char *tui_readline(const char *prompt);
 
-#endif /* __TUI_H      */
+#endif /* __TUI_H         */
 #endif /* HAVE_LIBNCURSES */

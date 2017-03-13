@@ -3,7 +3,11 @@ CC        = @CC@
 CFLAGS    = @CFLAGS@ -Wall -DASSEMBLER=\"$(AS)\"
 LDFLAGS   = @LIBS@ @LDFLAGS@
 <<<<<<< HEAD
+<<<<<<< HEAD
 SRCS      = main.c commands.c asrepl.c assembler.c engine.c tui.c
+=======
+SRCS      = main.c asrepl_commands.c asrepl.c assembler.c tui.c
+>>>>>>> cf074d568c54998cb8412c3e2fe908d5f6c22697
 =======
 SRCS      = main.c asrepl_commands.c asrepl.c assembler.c tui.c
 >>>>>>> cf074d568c54998cb8412c3e2fe908d5f6c22697
