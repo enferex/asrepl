@@ -112,12 +112,16 @@ int main(int argc, char **argv)
          * not terminate, go back to readline, and get more data.
          */
         const cmd_status_e cmd_status = asrepl_cmd_process(asr, line);
-        if (cmd_status == CMD_ERROR || cmd_status == CMD_HANDLED)
-          continue;
+        if (cmd_status == CMD_ERROR || cmd_status == CMD_HANDLED) {
+            free(line);
+            continue;
+        }
 
         /* Do the real work */
-        if (!(ctx = asrepl_new_ctx(line)))
-          continue;
+        if (!(ctx = asrepl_new_ctx(line))) {
+            free(line);
+            continue;
+        }
         asm_result = asrepl_assemble(asr, line, ctx);
         
         /* The assembly was generated correctly, execute it.
