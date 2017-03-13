@@ -34,6 +34,7 @@
 #ifdef HAVE_LIBNCURSES
 #include <ncurses.h>
 #include <panel.h>
+#include <string.h>
 #include "tui.h"
 
 #define ROWS LINES
@@ -84,8 +85,9 @@ void tui_init(void)
 
 char *tui_readline(const char *prompt)
 {
-    char buffer[MAX_COMMAND+1] = {0};
-    mvwgetstr(buffer
+    char buffer[128+1] = {0};
+    mvwgetstr(repl_win, 0, 10, buffer);
+    return strdup(buffer);
 }
 
 void tui_update(void)

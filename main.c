@@ -42,9 +42,10 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "asrepl.h"
-#include "commands.h"
 #include "assembler.h"
+#include "commands.h"
 #include "engine.h"
+#include "tui.h"
 #include "config.h"
 
 
@@ -70,12 +71,12 @@ static void usage(const char *execname)
 
 }
 
-char *read_line(asrepl_t *asr, const char *prompt)
+static char *read_line(asrepl_t *asr, const char *prompt)
 {
     assert(asr);
 #ifdef HAVE_LIBNCURSES
     if (asr->mode & MODE_TUI)
-      tui_readline(prompt);
+      return tui_readline(prompt);
     else
       return readline(prompt);
 #else
@@ -117,7 +118,7 @@ int main(int argc, char **argv)
 
     /* Engine has started, now query user for asm code */
     asrepl_update_prompt(DEFAULT_PROMPT);
-    while ((line = readline(prompt))) {
+    while ((line = read_line(asr, prompt))) {
         _Bool asm_result;
         ctx_t *ctx;
 
@@ -125,12 +126,16 @@ int main(int argc, char **argv)
          * not terminate, go back to readline, and get more data.
          */
         const cmd_status_e cmd_status = asrepl_cmd_process(asr, line);
-        if (cmd_status == CMD_ERROR || cmd_status == CMD_HANDLED)
-          continue;
+        if (cmd_status == CMD_ERROR || cmd_status == CMD_HANDLED) {
+            free(line);
+            continue;
+        }
 
         /* Do the real work */
-        if (!(ctx = asrepl_new_ctx(line)))
-          continue;
+        if (!(ctx = asrepl_new_ctx(line))) {
+            free(line);
+            continue;
+        }
         asm_result = asrepl_assemble(asr, line, ctx);
         
         /* The assembly was generated correctly, execute it.
@@ -145,7 +150,11 @@ int main(int argc, char **argv)
         else
           asrepl_delete_ctx(ctx);
 
-        add_history(line);
+        /* We only keep track of libreadline lines */
+        if (asr->mode == MODE_TUI)
+          free(line);
+        else
+          add_history(line);
     }
 
     return 0;
