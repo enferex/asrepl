@@ -52,13 +52,17 @@ static void usage(const char *execname)
 {
     printf("Usage: %s [-h] [-v] "
 #ifdef HAVE_LIBKEYSTONE
-           "[-k]"
+#ifdef HABE_LIBUNICORN
+           "[-a ARCH]"
+#endif
 #endif
            "\n"
            " -h: This help message.\n"
            " -v: Version information.\n"
 #ifdef HAVE_LIBKEYSTONE
-           " -k: Use the Keystone assembler.\n"
+#ifdef HAVE_LIBUNICORN
+           " -a ARCH: Specify architecture to emulate.  x86, x86-64, arm, & mips presently supported.\n"
+#endif
 #endif
            , execname);
 
@@ -76,13 +80,13 @@ int main(int argc, char **argv)
     /* Setup defaults for command line args */
     assembler_type = ASSEMBLER_GNU_AS_X8664;
     engine_type    = ENGINE_NATIVE;
-    while ((opt = getopt(argc, argv, "hk:v")) != -1) {
+    while ((opt = getopt(argc, argv, "ha:v")) != -1) {
     switch (opt) {
         case 'h': usage(argv[0]);   exit(EXIT_SUCCESS);
         case 'v': asrepl_version(); exit(EXIT_SUCCESS);
 #ifdef HAVE_LIBKEYSTONE
 #ifdef HAVE_LIBUNICORN
-        case 'k':
+        case 'a':
 		  assembler_type = ASSEMBLER_KEYSTONE;
 		  engine_type = ENGINE_UNICORN;
 		  marchval = optarg;

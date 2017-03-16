@@ -191,8 +191,8 @@ static _Bool unicorn_init(asrepl_t *asr, engine_t *eng)
 	uc_engine *uc;
 	uc_err err;
 	uc_context *context = 0x00;
+	uint32_t r_sp = UC_TEXT_ADDR + 0x200000 - 0x400; //Base address to bottom of 2MB alloc, less 1KB for padding
 
-	//TODO: parameterize execution mode via engine_t Arch/Mode flags
 	err = uc_open(asr->march, asr->mmode, &uc);
 	if (err != UC_ERR_OK) {
 		ERR("Error opening unicorn engine [uc_open()]: %s", uc_strerror(err));
@@ -203,6 +203,27 @@ static _Bool unicorn_init(asrepl_t *asr, engine_t *eng)
 	err = uc_mem_map(uc, UC_TEXT_ADDR, 2*1024*1024, UC_PROT_ALL);
 	if (err != UC_ERR_OK) {
 		ERR("Error mapping executable page [uc_mem_map()]: %s", uc_strerror(err));
+		return false;
+	}
+
+	err = uc_context_alloc(uc, &context);
+	if (err != UC_ERR_OK) {
+		ERR("Failed to allocat Unicorn context struct [uc_context_alloc()]: %s",
+				uc_strerror(err));
+		return false;
+	}
+	eng->state = (engine_h)context;
+	
+	switch(asr->march)
+	{
+		case UC_ARCH_X86: uc_reg_write(uc, UC_X86_REG_ESP, &r_sp); break;
+		case UC_ARCH_ARM: uc_reg_write(uc, UC_ARM_REG_SP,  &r_sp); break;
+		case UC_ARCH_MIPS:uc_reg_write(uc, UC_MIPS_REG_SP, &r_sp); break;
+	}
+	
+	err = uc_context_save(uc, context);
+	if (err != UC_ERR_OK) {
+		ERR("Failed to save the unicorn context [uc_context_save()]: %s", uc_strerror(err));
 		return false;
 	}
 
@@ -246,14 +267,6 @@ void unicorn_execute(engine_t *eng, const ctx_t *ctx)
 					uc_strerror(err));
 			return;
 		}
-	}else{
-		err = uc_context_alloc(uc, &context);
-		if (err != UC_ERR_OK) {
-			ERR("Failed to allocat Unicorn context struct [uc_context_alloc()]: %s",
-					uc_strerror(err));
-			return;
-		}
-		eng->state = (engine_h)context;
 	}
 
 	err = uc_emu_start(uc, UC_TEXT_ADDR, UC_TEXT_ADDR+ctx->length, 0, 0);
