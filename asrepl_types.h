@@ -133,7 +133,6 @@ typedef struct _asrepl_t
     engine_t    *engine;
     macro_t     *macros;
     macro_t     *active_macro; /* The macro in macros being used. */
-    //pid_t        engine_pid;
 } asrepl_t;
 
 #endif /* __ASREPL_TYPES_H */
