@@ -47,6 +47,7 @@ void tui_init(void)
 {
     int r, c;
     initscr();
+    nl();                 /* Display the newline                           */
     raw();                /* Disable buffer ing and recv ctrl-c and ctrl-z */
     keypad(stdscr, TRUE); /* Enable keypad and arrows                      */
 
@@ -70,6 +71,7 @@ void tui_init(void)
 
     /* REPL window (bottom) */
     repl_win = newwin(ROWS-r, COLS,  r, 0);
+    scrollok(repl_win, TRUE);
     box(repl_win, 0, 0);
     mvwprintw(repl_win, 0, 3, "=[ Input/Output ]=");
     
@@ -78,6 +80,9 @@ void tui_init(void)
     reg_pan  = new_panel(reg_win);
     out_pan  = new_panel(out_win);
     repl_pan = new_panel(repl_win);
+    
+    /* Place the cursor in the repl */
+    wmove(repl_win, 10, 2);
 
     /* Draw */
     tui_update();
@@ -86,7 +91,7 @@ void tui_init(void)
 char *tui_readline(const char *prompt)
 {
     char buffer[128+1] = {0};
-    mvwgetstr(repl_win, 0, 10, buffer);
+    wgetstr(repl_win, buffer);
     return strdup(buffer);
 }
 
