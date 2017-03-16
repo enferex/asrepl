@@ -35,6 +35,7 @@
 
 #include <stdint.h>
 #include <sys/types.h>
+#include "registers.h"
 #include "config.h"
 
 /* The machine code */
@@ -116,10 +117,11 @@ typedef void *engine_h;
 struct _engine_desc_t;
 typedef struct _engine_t
 {
-	engine_e type;
-	engine_h handle;
-	pid_t	 engine_pid;
-	engine_h state;
+	engine_e    type;
+	engine_h    handle;
+	pid_t	    engine_pid;
+    registers_u registers;
+	engine_h    state;
 	const struct _engine_desc_t *desc;
 } engine_t;
 
