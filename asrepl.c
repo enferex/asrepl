@@ -117,10 +117,16 @@ uintptr_t asrepl_get_pc(pid_t pid)
     return gpregs.rip;
 }
 
+void asrepl_read_registers(asrepl_t *asr)
+{
+    assert(asr);
+    engine_read_registers(asr->engine);
+}
+
 void asrepl_dump_registers(asrepl_t *asr)
 {
     assert(asr);
-    return engine_dump_registers(asr->engine);
+    engine_dump_registers(asr->engine);
 }
 
 /* Call the assembler to assemble this */

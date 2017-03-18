@@ -47,7 +47,6 @@
 #include "engine.h"
 #include "config.h"
 
-
 static void usage(const char *execname)
 {
     printf("Usage: %s [-h] [-v] "

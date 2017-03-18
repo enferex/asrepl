@@ -62,5 +62,8 @@ typedef union _registers_t
     isa_e tag; /* Which union variant is represented by 'u' */
 } registers_u;
 
+/* Accessors */
+#define REGS_X8664(_eng) ((_eng)->registers.u.x8664)
+
 #endif /* __REGISTERS_H */
 

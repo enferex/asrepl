@@ -85,7 +85,8 @@ extern char *prompt;
 extern void asrepl_update_prompt(const char *new_prompt);
 extern void asrepl_version(void);
 
-/* Print register values to stdout */
+/* Get/Print register values to stdout */
+extern void asrepl_read_registers(asrepl_t *asr);
 extern void asrepl_dump_registers(asrepl_t *asr);
 
 /* Return new context to represent a new blob of machine instructions. */
@@ -106,10 +107,10 @@ extern _Bool asrepl_assemble(
 extern void asrepl_execute(asrepl_t *asr, const ctx_t *ctx);
 
 /* Routines for macros (only one macro built at a time) */
-extern void asrepl_macro_begin(asrepl_t *asr, const char *name);
-extern void asrepl_macro_end(asrepl_t *asr);
-extern void asrepl_macro_add_ctx(asrepl_t *asr, ctx_t *ctx);
-extern void asrepl_macro_execute(asrepl_t *asr, const char *name);
+extern void     asrepl_macro_begin(asrepl_t *asr, const char *name);
+extern void     asrepl_macro_end(asrepl_t *asr);
+extern void     asrepl_macro_add_ctx(asrepl_t *asr, ctx_t *ctx);
+extern void     asrepl_macro_execute(asrepl_t *asr, const char *name);
 extern macro_t *asrepl_macro_find(asrepl_t *asr, const char *name);
 
 #endif /* __ASREPL_H */

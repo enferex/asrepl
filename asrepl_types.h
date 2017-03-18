@@ -113,16 +113,29 @@ typedef enum
     ENGINE_MAX
 } engine_e;
 
+/* Routines that each engine must supply. */
+struct _engine_t;
+typedef struct _engine_desc_t
+{
+    engine_e type;
+
+    /* Callbacks */
+    _Bool (*init)           (struct _engine_t  *eng);
+    void  (*execute)        (struct _engine_t  *eng, const ctx_t *ctx);
+    _Bool (*shutdown)       (struct _engine_t  *eng);
+    void  (*read_registers) (struct _engine_t  *eng);
+    void  (*dump_registers) (struct _engine_t  *eng);
+} engine_desc_t;
+
+/* Execution engine (native is default and uses a fork'd process + ptrace) */
 typedef void *engine_h;
-struct _engine_desc_t;
 typedef struct _engine_t
 {
-    engine_e    type;
-    engine_h    handle;
-    pid_t       engine_pid;
-    registers_u registers;
-    engine_h    state;
-    const struct _engine_desc_t *desc;
+    engine_h             handle;
+    pid_t                engine_pid;
+    engine_h             state;
+    registers_u          registers;
+    const engine_desc_t *desc;
 } engine_t;
 
 /* State object, one for each instance of asreplt... probably only ever one. */

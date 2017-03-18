@@ -30,76 +30,12 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
-#include <assert.h>
-#include <stdbool.h>
-#include "asrepl.h"
-#include "asrepl_types.h"
-#include "config.h"
-#include "engines/registration.h"
+#ifndef __COMMON_H
+#define __COMMON_H
+#include "../asrepl_types.h"
 
-static const engine_desc_t *get_desc(engine_e type)
-{
-    const int n_regs = sizeof(engine_registrations) /
-                       sizeof(engine_registrations[0]);
+extern void common_x8664_dump_registers(engine_t *eng);
 
-    for (int i=0; i<n_regs; ++i) {
-        const engine_desc_t *desc = engine_registrations[i]();
-        if (desc && desc->type == type)
-          return desc;
-    }
+#endif /* __COMMON_H */
 
-    return NULL;
-}
 
-/* Ensure a complete desc */
-static void sanity(const engine_t *eng, engine_e type)
-{
-    assert(eng);
-    assert(eng->desc);
-    assert(eng->desc->type == type);
-    assert(eng->desc->init);
-    assert(eng->desc->execute);
-    assert(eng->desc->shutdown);
-    assert(eng->desc->read_registers);
-    assert(eng->desc->dump_registers);
-}
-
-engine_t *engine_init(engine_e type)
-{
-    engine_t *eng = calloc(1, sizeof(engine_t));
-    if (!eng)
-      ERF("Could not allocate enough memory to represent an engine.");
-
-    /* Handle descriptions */
-    if (type == ENGINE_INVALID || type >= ENGINE_MAX)
-      ERF("Invalid engine type: %d", (int)type);
-
-    eng->desc = get_desc(type);
-    sanity(eng, type);
-    eng->state = NULL;
-
-    /* Initialize the engine */
-    if (eng->desc->init(eng) == false)
-      ERF("Error initializing the engine.");
-
-    return eng;
-}
-
-void engine_execute(engine_t *eng, const ctx_t *ctx)
-{
-    assert(eng && eng->desc);
-    return eng->desc->execute(eng, ctx);
-}
-
-void engine_read_registers(engine_t *eng)
-{
-    assert(eng && eng->desc);
-    return eng->desc->read_registers(eng);
-}
-
-void engine_dump_registers(engine_t *eng)
-{
-    assert(eng && eng->desc);
-    eng->desc->read_registers(eng);
-    return eng->desc->dump_registers(eng);
-}
