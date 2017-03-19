@@ -30,76 +30,37 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
-#include <assert.h>
-#include <stdbool.h>
-#include "asrepl.h"
-#include "asrepl_types.h"
-#include "config.h"
-#include "engines/registration.h"
+#include <stdio.h>
+#include "../asrepl_types.h"
+#include "common.h"
 
-static const engine_desc_t *get_desc(engine_e type)
+#define REG64(_eng, _reg) \
+    printf("%s\t 0x%lx\n", #_reg, REGS_X8664(_eng)._reg)
+
+void common_x8664_dump_registers(engine_t *eng)
 {
-    const int n_regs = sizeof(engine_registrations) /
-                       sizeof(engine_registrations[0]);
-
-    for (int i=0; i<n_regs; ++i) {
-        const engine_desc_t *desc = engine_registrations[i]();
-        if (desc && desc->type == type)
-          return desc;
-    }
-
-    return NULL;
-}
-
-/* Ensure a complete desc */
-static void sanity(const engine_t *eng, engine_e type)
-{
-    assert(eng);
-    assert(eng->desc);
-    assert(eng->desc->type == type);
-    assert(eng->desc->init);
-    assert(eng->desc->execute);
-    assert(eng->desc->shutdown);
-    assert(eng->desc->read_registers);
-    assert(eng->desc->dump_registers);
-}
-
-engine_t *engine_init(engine_e type)
-{
-    engine_t *eng = calloc(1, sizeof(engine_t));
-    if (!eng)
-      ERF("Could not allocate enough memory to represent an engine.");
-
-    /* Handle descriptions */
-    if (type == ENGINE_INVALID || type >= ENGINE_MAX)
-      ERF("Invalid engine type: %d", (int)type);
-
-    eng->desc = get_desc(type);
-    sanity(eng, type);
-    eng->state = NULL;
-
-    /* Initialize the engine */
-    if (eng->desc->init(eng) == false)
-      ERF("Error initializing the engine.");
-
-    return eng;
-}
-
-void engine_execute(engine_t *eng, const ctx_t *ctx)
-{
-    assert(eng && eng->desc);
-    return eng->desc->execute(eng, ctx);
-}
-
-void engine_read_registers(engine_t *eng)
-{
-    assert(eng && eng->desc);
-    return eng->desc->read_registers(eng);
-}
-
-void engine_dump_registers(engine_t *eng)
-{
-    assert(eng && eng->desc);
-    eng->desc->read_registers(eng);
-    return eng->desc->dump_registers(eng);
+    REG64(eng, eflags);
+    REG64(eng, rip);
+    REG64(eng, cs);
+    REG64(eng, ds);
+    REG64(eng, es);
+    REG64(eng, fs);
+    REG64(eng, gs);
+    REG64(eng, ss);
+    REG64(eng, rbp);
+    REG64(eng, rsp);
+    REG64(eng, rax);
+    REG64(eng, rbx);
+    REG64(eng, rcx);
+    REG64(eng, rdx);
+    REG64(eng, rdi);
+    REG64(eng, rsi);
+    REG64(eng, r8);
+    REG64(eng, r9);
+    REG64(eng, r10);
+    REG64(eng, r11);
+    REG64(eng, r12);
+    REG64(eng, r13);
+    REG64(eng, r14);
+    REG64(eng, r15);
 }

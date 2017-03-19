@@ -30,76 +30,40 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
-#include <assert.h>
-#include <stdbool.h>
-#include "asrepl.h"
-#include "asrepl_types.h"
-#include "config.h"
-#include "engines/registration.h"
+#ifndef __REGISTERS_H
+#define __REGISTERS_H
 
-static const engine_desc_t *get_desc(engine_e type)
+#include <stdint.h>
+
+/* Instruction Set Architecture tags */
+typedef enum _isa_e
 {
-    const int n_regs = sizeof(engine_registrations) /
-                       sizeof(engine_registrations[0]);
+    ISA_X8664,
+} isa_e;
 
-    for (int i=0; i<n_regs; ++i) {
-        const engine_desc_t *desc = engine_registrations[i]();
-        if (desc && desc->type == type)
-          return desc;
-    }
-
-    return NULL;
-}
-
-/* Ensure a complete desc */
-static void sanity(const engine_t *eng, engine_e type)
+/* Similar to sys/user.h */
+typedef struct _x8664_regs_t
 {
-    assert(eng);
-    assert(eng->desc);
-    assert(eng->desc->type == type);
-    assert(eng->desc->init);
-    assert(eng->desc->execute);
-    assert(eng->desc->shutdown);
-    assert(eng->desc->read_registers);
-    assert(eng->desc->dump_registers);
-}
+    /* These are tagged by ISA_X8664 */
+    uint64_t r8, r9, r10, r11, r12, r13, r14, r15;
+    uint64_t rax, rbx, rcx, rdx;
+    uint64_t rbp, rsp, rdi, rsi;
+    uint64_t cs, ds, es, fs, gs, ss;
+    uint64_t rip, eflags;
+} x8664_regs_t;
 
-engine_t *engine_init(engine_e type)
+/* Mmmm fake algebraic data type */
+typedef union _registers_t
 {
-    engine_t *eng = calloc(1, sizeof(engine_t));
-    if (!eng)
-      ERF("Could not allocate enough memory to represent an engine.");
+    union {
+        x8664_regs_t x8664;
+    } u;
 
-    /* Handle descriptions */
-    if (type == ENGINE_INVALID || type >= ENGINE_MAX)
-      ERF("Invalid engine type: %d", (int)type);
+    isa_e tag; /* Which union variant is represented by 'u' */
+} registers_u;
 
-    eng->desc = get_desc(type);
-    sanity(eng, type);
-    eng->state = NULL;
+/* Accessors */
+#define REGS_X8664(_eng) ((_eng)->registers.u.x8664)
 
-    /* Initialize the engine */
-    if (eng->desc->init(eng) == false)
-      ERF("Error initializing the engine.");
+#endif /* __REGISTERS_H */
 
-    return eng;
-}
-
-void engine_execute(engine_t *eng, const ctx_t *ctx)
-{
-    assert(eng && eng->desc);
-    return eng->desc->execute(eng, ctx);
-}
-
-void engine_read_registers(engine_t *eng)
-{
-    assert(eng && eng->desc);
-    return eng->desc->read_registers(eng);
-}
-
-void engine_dump_registers(engine_t *eng)
-{
-    assert(eng && eng->desc);
-    eng->desc->read_registers(eng);
-    return eng->desc->dump_registers(eng);
-}

@@ -48,7 +48,6 @@
 #include "tui.h"
 #include "config.h"
 
-
 static void usage(const char *execname)
 {
     printf("Usage: %s [-h] [-v] "
@@ -99,10 +98,10 @@ int main(int argc, char **argv)
     switch (opt) {
         case 'h': usage(argv[0]);   exit(EXIT_SUCCESS);
         case 'v': asrepl_version(); exit(EXIT_SUCCESS);
-#ifdef HAVE_LIBUNICORN
+#ifdef HAVE_LIBKEYSTONE
         case 'k': assembler_type = ASSEMBLER_KEYSTONE; break;
 #endif
-#ifdef HAVE_LIBKEYSTONE
+#ifdef HAVE_LIBUNICORN
         case 'u': engine_type = ENGINE_UNICORN; break;
 #endif
         default: break;
