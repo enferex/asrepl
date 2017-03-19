@@ -14,14 +14,8 @@ AC_PROG_CC
 # Checks for libraries (we check unicorn twice to easily add -lpthread to LIBS)
 AC_CHECK_LIB([readline], [readline])
 AC_CHECK_LIB([keystone], [ks_asm])
-<<<<<<< HEAD
-<<<<<<< HEAD
 AC_CHECK_LIB([unicorn],  [uc_context_alloc], [], [], [-lpthread])
 AC_CHECK_LIB([unicorn],  [uc_context_alloc], [LIBS+=-lpthread], [], [-lpthread])
-=======
->>>>>>> cf074d568c54998cb8412c3e2fe908d5f6c22697
-=======
->>>>>>> cf074d568c54998cb8412c3e2fe908d5f6c22697
 AC_CHECK_LIB([ncurses],  [initscr])
 AC_CHECK_LIB([panel],    [new_panel])
 
