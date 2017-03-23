@@ -32,7 +32,7 @@ static void native_x8664_read_registers(engine_t *eng)
 
     get_registers(pid, &regs);
 
-    REGS_X8664(eng).eflags = regs.eflags;
+    REGS_X8664(eng).eflags  = regs.eflags;
     REGS_X8664(eng).rip     = regs.rip;
     REGS_X8664(eng).cs      = regs.cs;
     REGS_X8664(eng).ds      = regs.ds;
@@ -163,7 +163,7 @@ static void native_x8664_execute(engine_t *eng, const ctx_t *ctx)
 const engine_desc_t *native_x8664_registration(void)
 {
     static const engine_desc_t desc = {
-        .type           = ENGINE_NATIVE,
+        .type           = ENGINE_NATIVE_X8664,
         .init           = native_x8664_init,
         .execute        = native_x8664_execute,
         .shutdown       = native_x8664_shutdown,

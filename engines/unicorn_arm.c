@@ -30,14 +30,51 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
-#ifndef __COMMON_H
-#define __COMMON_H
+#include "../config.h"
+#ifdef HAVE_LIBUNICORN
+
+#include "unicorn.h"
 #include "../asrepl_types.h"
 
-extern void common_x8664_dump_registers(engine_t *eng);
-extern void common_arm_dump_registers(engine_t *eng);
-extern void common_mips_dump_registers(engine_t *eng);
+static void unicorn_arm_read_registers(engine_t *eng)
+{
+#define R(_eng, _reg) (&(REGS_ARM(_eng)._reg))
+    engine_h handle = eng->handle;
 
-#endif /* __COMMON_H */
+    uc_reg_read(handle, UC_ARM_REG_CPSR, R(eng, cpsr));
+	uc_reg_read(handle, UC_ARM_REG_PC,   R(eng, pc));
+	uc_reg_read(handle, UC_ARM_REG_SP,   R(eng, sp));
+	uc_reg_read(handle, UC_ARM_REG_LR,   R(eng, lr));
+	uc_reg_read(handle, UC_ARM_REG_R0,   R(eng, r0));
+	uc_reg_read(handle, UC_ARM_REG_R1,   R(eng, r1));
+	uc_reg_read(handle, UC_ARM_REG_R2,   R(eng, r2));
+	uc_reg_read(handle, UC_ARM_REG_R3,   R(eng, r3));
+	uc_reg_read(handle, UC_ARM_REG_R4,   R(eng, r4));
+	uc_reg_read(handle, UC_ARM_REG_R5,   R(eng, r5));
+	uc_reg_read(handle, UC_ARM_REG_R6,   R(eng, r6));
+	uc_reg_read(handle, UC_ARM_REG_R7,   R(eng, r7));
+	uc_reg_read(handle, UC_ARM_REG_R8,   R(eng, r8));
+	uc_reg_read(handle, UC_ARM_REG_R9,   R(eng, r9));
+	uc_reg_read(handle, UC_ARM_REG_R10,  R(eng, r10));
+	uc_reg_read(handle, UC_ARM_REG_R11,  R(eng, r11));
+	uc_reg_read(handle, UC_ARM_REG_R12,  R(eng, r12));
+}
 
+/*
+ * REGISTRATION
+ */
+const engine_desc_t *unicorn_arm_registration(void)
+{
+    static const engine_desc_t desc = {
+        .type           = ENGINE_UNICORN_ARM,
+        .init           = unicorn_init,
+        .execute        = unicorn_arm_execute,
+        .shutdown       = unicorn_arm_shutdown,
+        .read_registers = unicorn_arm_read_registers,
+        .dump_registers = common_arm_dump_registers
+    };
 
+    return &desc;
+}
+
+#endif /* HAVE_LIBUNICORN */

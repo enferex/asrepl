@@ -38,24 +38,35 @@
 #include <sys/user.h>
 #include <sys/wait.h>
 #include "asrepl.h"
+#include "asrepl_types.h"
 #include "assembler.h"
 #include "engine.h"
+#include "config.h"
 
 /* Declared in asrepl.h */
 char *prompt = NULL;
 
-asrepl_t *asrepl_init(assembler_e assembler_type, engine_e engine_type)
+#ifdef HAVE_LIBUNICORN
+#include <unicorn/unicorn.h>
+#endif
+
+asrepl_t *asrepl_init(
+    isa_e       isa_type,
+    assembler_e assembler_type,
+    engine_e    engine_type)
 {
     asrepl_t *asr = calloc(1, sizeof(asrepl_t));
 
     if (!asr)
       ERF("Error allocating memory for the asrepl handle.");
 
+    asr->isa = isa_type;
+
     /* Choose and initialize the assembler */
-    if (!(asr->assembler = assembler_init(assembler_type)))
+    if (!(asr->assembler = assembler_init(asr, assembler_type)))
       ERF("Error locating an assembler to use.");
 
-    if (!(asr->engine = engine_init(engine_type)))
+    if (!(asr->engine = engine_init(asr, engine_type)))
       ERF("Error locating an engine to use.");
 
     return asr;
@@ -68,7 +79,7 @@ ctx_t *asrepl_new_ctx(const char *asm_line)
 
     if (len == 0)
       return NULL;
-    
+
     if (len == MAX_ASM_LINE) {
         ERR("Input line is too long.");
         return NULL;
@@ -150,7 +161,7 @@ void asrepl_execute(asrepl_t *asr, const ctx_t *ctx)
 		return;
 	}*/
 
-	return engine_execute(asr->engine, ctx);
+	engine_execute(asr->engine, ctx);
 }
 
 static macro_t *macro_new(const char *name)
@@ -216,7 +227,7 @@ static void trim_name(const char *name, char *result)
      * result will be (for mutation) */
     memcpy(result, name, len);
     result[len] = '\0';
-    
+
     /* Trim trailing whitespace */
     for (int i=len-1; i>0; --i)
       if (isspace(result[i]))
@@ -316,4 +327,26 @@ void asrepl_macro_execute(asrepl_t *asr, const char *name)
     /* Execute each context in the macro */
     for (ctx=macro->ctxs; ctx; ctx=ctx->next)
       asrepl_execute(asr, ctx);
+}
+
+isa_e isa_from_string(const char *isa_str)
+{
+    for (int i=0; i<sizeof(isa_names)/sizeof(isa_names[0]); ++i)
+      if (strncmp(isa_names[i], isa_str, strlen(isa_names[i])) == 0)
+        return (isa_e)i;
+
+    return ISA_UNKNOWN;
+}
+
+/* Return a static buffer of all ISA names (for the command line -h help) */
+const char* isa_all_names(void)
+{
+    static char buffer[256] = {0};
+
+    for (int i=0; i<sizeof(isa_names)/sizeof(isa_names[0]); ++i) {
+        strcat(buffer, isa_names[i]);
+        strcat(buffer, " ");
+    }
+
+    return buffer;
 }

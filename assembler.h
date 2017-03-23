@@ -6,7 +6,7 @@
 #include "config.h"
 
 /* Return an assembler for 'type', or NULL on error. */
-extern assembler_t *assembler_init(assembler_e type);
+extern assembler_t *assembler_init(asrepl_t *asr, assembler_e type);
 
 /* Return 'true' on success and 'false' otherwise. */
 extern _Bool assembler_assemble(assembler_t *as, const char *line, ctx_t *ctx);

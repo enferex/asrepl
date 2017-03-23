@@ -64,30 +64,25 @@ static void sanity(const engine_t *eng, engine_e type)
     assert(eng->desc->dump_registers);
 }
 
-engine_t *engine_init(engine_e type)
+engine_t *engine_init(asrepl_t *asr, engine_e type)
 {
-    engine_t *eng = calloc(1, sizeof(engine_t));
-    if (!eng)
-      ERF("Could not allocate enough memory to represent an engine.");
+	engine_t *eng = calloc(1, sizeof(engine_t));
+	if (!eng)
+		ERF("Could not allocate enough memory to represent an engine.");
 
-    /* Handle descriptions */
-    if (type == ENGINE_INVALID || type >= ENGINE_MAX)
-      ERF("Invalid engine type: %d", (int)type);
-
-    eng->desc = get_desc(type);
+	eng->desc = get_desc(type);
     sanity(eng, type);
-    eng->state = NULL;
 
-    /* Initialize the engine */
-    if (eng->desc->init(eng) == false)
+	/* Initialize the engine */
+	if (eng->desc->init(eng) == false)
       ERF("Error initializing the engine.");
 
-    return eng;
+	return eng;
 }
 
 void engine_execute(engine_t *eng, const ctx_t *ctx)
 {
-    assert(eng && eng->desc);
+    assert(ctx && eng && eng->desc);
     return eng->desc->execute(eng, ctx);
 }
 
@@ -101,5 +96,5 @@ void engine_dump_registers(engine_t *eng)
 {
     assert(eng && eng->desc);
     eng->desc->read_registers(eng);
-    return eng->desc->dump_registers(eng);
+    eng->desc->dump_registers(eng);
 }

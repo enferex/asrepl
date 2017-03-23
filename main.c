@@ -50,56 +50,27 @@
 static void usage(const char *execname)
 {
     printf("Usage: %s [-h] [-v] "
-#ifdef HAVE_LIBKEYSTONE
-           "[-k] "
-#endif
-#ifdef HAVE_LIBUNICORN
-           "[-u] "
+#ifdef MULTI_ARCH
+           "[-a ARCH]"
 #endif
            "\n"
            " -h: This help message.\n"
            " -v: Version information.\n"
-#ifdef HAVE_LIBKEYSTONE
-           " -k: Use the Keystone assembler.\n"
-#endif
-#ifdef HAVE_LIBKEYSTONE
-           " -u: Use the Unicorn execution engine.\n"
+#ifdef MULTI_ARCH
+           " -a ARCH: Architecture to emulate:(%s)"
+           , isa_all_names()
 #endif
            , execname);
 
+
 }
 
-int main(int argc, char **argv)
+/* Main loop of execution */
+static void repl(asrepl_t *asr)
 {
-    int opt;
     char *line;
-    assembler_e assembler_type;
-    engine_e engine_type;
-    asrepl_t *asr;
 
-    /* Setup defaults for command line args */
-    assembler_type = ASSEMBLER_GNU_AS_X8664;
-    engine_type    = ENGINE_NATIVE;
-    while ((opt = getopt(argc, argv, "hkuv")) != -1) {
-    switch (opt) {
-        case 'h': usage(argv[0]);   exit(EXIT_SUCCESS);
-        case 'v': asrepl_version(); exit(EXIT_SUCCESS);
-#ifdef HAVE_LIBKEYSTONE
-        case 'k': assembler_type = ASSEMBLER_KEYSTONE; break;
-#endif
-#ifdef HAVE_LIBUNICORN
-        case 'u': engine_type = ENGINE_UNICORN; break;
-#endif
-        default: break;
-        }
-    }
-
-#ifndef __x86_64__
-    ERF("Sorry, %s only operates on x86-64 architectures.", NAME);
-#endif
-    /* Create a state object for this instance of asrepl */
-    if (!(asr = asrepl_init(assembler_type, engine_type)))
-      ERF("Error initializing a new asrepl instance.");
+    assert(asr);
 
     /* Engine has started, now query user for asm code */
     asrepl_update_prompt(DEFAULT_PROMPT);
@@ -137,6 +108,57 @@ int main(int argc, char **argv)
 
         add_history(line);
     }
+}
+
+int main(int argc, char **argv)
+{
+    int           opt;
+    isa_e        isa_type;
+    assembler_e  assembler_type;
+    engine_e     engine_type;
+    asrepl_t    *asr;
+
+    /* Setup defaults for command line args (default to x8664 native) */
+    isa_type       = ISA_X8664;
+    assembler_type = ASSEMBLER_GNU_AS_X8664;
+    engine_type    = ENGINE_NATIVE_X8664;
+    while ((opt = getopt(argc, argv, "a:hv")) != -1) {
+    switch (opt) {
+        case 'h': usage(argv[0]);   exit(EXIT_SUCCESS);
+        case 'v': asrepl_version(); exit(EXIT_SUCCESS);
+#ifdef MULTI_ARCH
+        case 'a':
+		  isa_type       = isa_from_string(optarg);
+		  engine_type    = ENGINE_UNICORN;
+		  assembler_type = ASSEMBLER_KEYSTONE;
+		  break;
+#endif
+        default: break;
+        }
+    }
+
+#ifndef __x86_64__
+    /* If 32bit and trying to run gnu as OR our native engine. */
+    if (assembler_type == ASSEMBLER_GNU_AS_X8664 || 
+        engine_type    == ENGINE_NATIVE) {
+        ERF("Sorry, %s only operates on x86-64 architectures when "
+            "using the default assembler and execution engine.", NAME);
+    }
+#endif
+    
+    if (isa_type == ISA_UNKNOWN)
+      ERF("Invalid arch (-a), see '-h' for list of available "
+          "architectures.");
+
+    if (engine_type == ENGINE_NATIVE_X8664 && isa_type != ISA_X8664) 
+      ERF("Native execution only permits x8664 assembly.\n"
+          "Install Unicorn and Keystone for multi arch support.");
+
+    /* Create a state object for this instance of asrepl */
+    if (!(asr = asrepl_init(isa_type, assembler_type, engine_type)))
+      ERF("Error initializing a new asrepl instance.");
+
+    repl(asr);
 
     return 0;
 }

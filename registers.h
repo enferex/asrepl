@@ -38,13 +38,37 @@
 /* Instruction Set Architecture tags */
 typedef enum _isa_e
 {
+    ISA_UNKNOWN,
+    ISA_X8632,
     ISA_X8664,
+    ISA_ARM,
+    ISA_ARM64,
+    ISA_MIPS32,
 } isa_e;
 
-/* Similar to sys/user.h */
+/* Names accepted from the '-a' command line option. */
+const char *isa_names[] = 
+{
+    [ISA_X8632]  = "x8632",
+    [ISA_X8664]  = "x8664",
+    [ISA_ARM]    = "arm",
+    [ISA_ARM64]  = "aarch64",
+    [ISA_MIPS32] = "mips32",
+};
+
+extern isa_e isa_from_string(const char *string);
+extern const char *isa_all_names(void);
+
+typedef struct _x8632_regs_t
+{
+    uint32_t eax, ebx, ecx, edx;
+    uint32_t ebp, esp, edi, esi;
+    uint32_t cs, ds, es, fs, gs, ss;
+    uint32_t eip, eflags;
+} x8632_regs_t;
+
 typedef struct _x8664_regs_t
 {
-    /* These are tagged by ISA_X8664 */
     uint64_t r8, r9, r10, r11, r12, r13, r14, r15;
     uint64_t rax, rbx, rcx, rdx;
     uint64_t rbp, rsp, rdi, rsi;
@@ -52,18 +76,40 @@ typedef struct _x8664_regs_t
     uint64_t rip, eflags;
 } x8664_regs_t;
 
+typedef struct _arm_regs_t
+{
+    uint32_t cpsr, pc, sp, lr;
+    uint32_t r0, r1, r2, r3, r4, r5;
+    uint32_t r6, r7, r8, r9, r10, r11, r12;
+} arm_regs_t;
+
+typedef struct _mips32_regs_t
+{
+    uint32_t gp, sp, fp, ra;
+    uint32_t zero, at, v0, v1;
+    uint32_t a0, a1, a2, a3;
+    uint32_t t0, t1, t2, t3, t4, t5, t6, t7, t8, t9;
+    uint32_t s0, s1, s2, s3, s4, s5, s6, s7;
+    uint32_t k0, k1;
+} mips32_regs_t;
+
 /* Mmmm fake algebraic data type */
 typedef union _registers_t
 {
     union {
-        x8664_regs_t x8664;
+        x8632_regs_t  x8632;
+        x8664_regs_t  x8664;
+        arm_regs_t    arm;
+        mips32_regs_t mips32;
     } u;
 
     isa_e tag; /* Which union variant is represented by 'u' */
 } registers_u;
 
 /* Accessors */
-#define REGS_X8664(_eng) ((_eng)->registers.u.x8664)
+#define REGS_X8632(_eng)  ((_eng)->registers.u.x8632)
+#define REGS_X8664(_eng)  ((_eng)->registers.u.x8664)
+#define REGS_ARM(_eng)    ((_eng)->registers.u.arm)
+#define REGS_MIPS32(_eng) ((_eng)->registers.u.mips32)
 
 #endif /* __REGISTERS_H */
-
