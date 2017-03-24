@@ -132,16 +132,17 @@ typedef enum
 
 /* Routines that each engine must supply. */
 struct _engine_t;
+struct _asrepl_t;
 typedef struct _engine_desc_t
 {
     engine_e type;
 
     /* Callbacks */
-    _Bool (*init)           (asrepl_t *asrepl, struct _engine_t  *eng);
-    void  (*execute)        (struct _engine_t  *eng, const ctx_t *ctx);
-    _Bool (*shutdown)       (struct _engine_t  *eng);
-    void  (*read_registers) (struct _engine_t  *eng);
-    void  (*dump_registers) (struct _engine_t  *eng);
+    _Bool (*init)           (struct _asrepl_t *asr, struct _engine_t  *eng);
+    void  (*execute)        (struct _engine_t *eng, const ctx_t *ctx);
+    _Bool (*shutdown)       (struct _engine_t *eng);
+    void  (*read_registers) (struct _engine_t *eng);
+    void  (*dump_registers) (struct _engine_t *eng);
 } engine_desc_t;
 
 /* Execution engine (native is default and uses a fork'd process + ptrace) */

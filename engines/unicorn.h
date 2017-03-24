@@ -41,6 +41,7 @@
 
 extern _Bool unicorn_init(asrepl_t *asr, engine_t *eng);
 extern _Bool unicorn_shutdown(engine_t *eng);
+extern void  unicorn_execute(engine_t *eng, const ctx_t *ctx);
 
 #endif /* HAVE_LIBUNICORN */
 #endif /* __ASREPL_UNICORN_H */

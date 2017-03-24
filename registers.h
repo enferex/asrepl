@@ -47,7 +47,8 @@ typedef enum _isa_e
 } isa_e;
 
 /* Names accepted from the '-a' command line option. */
-const char *isa_names[] = 
+static const char *isa_names[] __attribute__((unused));
+static const char *isa_names[] =
 {
     [ISA_X8632]  = "x8632",
     [ISA_X8664]  = "x8664",

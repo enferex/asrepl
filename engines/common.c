@@ -40,6 +40,26 @@
 #define REG64(_eng, _reg, _acc) \
     printf("%s\t 0x%lx\n", #_reg, _acc(_eng)._reg)
 
+void common_x8632_dump_registers(engine_t *eng)
+{
+    REG32(eng, eflags, REGS_X8632);
+    REG32(eng, eip,    REGS_X8632);
+    REG32(eng, cs,     REGS_X8632);
+    REG32(eng, ds,     REGS_X8632);
+    REG32(eng, es,     REGS_X8632);
+    REG32(eng, fs,     REGS_X8632);
+    REG32(eng, gs,     REGS_X8632);
+    REG32(eng, ss,     REGS_X8632);
+    REG32(eng, ebp,    REGS_X8632);
+    REG32(eng, esp,    REGS_X8632);
+    REG32(eng, eax,    REGS_X8632);
+    REG32(eng, ebx,    REGS_X8632);
+    REG32(eng, ecx,    REGS_X8632);
+    REG32(eng, edx,    REGS_X8632);
+    REG32(eng, edi,    REGS_X8632);
+    REG32(eng, esi,    REGS_X8632);
+}
+
 void common_x8664_dump_registers(engine_t *eng)
 {
     REG64(eng, eflags, REGS_X8664);
@@ -66,26 +86,6 @@ void common_x8664_dump_registers(engine_t *eng)
     REG64(eng, r13,    REGS_X8664);
     REG64(eng, r14,    REGS_X8664);
     REG64(eng, r15,    REGS_X8664);
-}
-
-void common_x8632_dump_registers(engine_t *eng)
-{
-	REG32(eng, eflags, REGS_X8632);
-	REG32(eng, eip,    REGS_X8632);
-	REG32(eng, cs,     REGS_X8632);
-	REG32(eng, ds,     REGS_X8632);
-	REG32(eng, es,     REGS_X8632);
-	REG32(eng, fs,     REGS_X8632);
-	REG32(eng, gs,     REGS_X8632);
-	REG32(eng, ss,     REGS_X8632);
-	REG32(eng, ebp,    REGS_X8632);
-	REG32(eng, esp,    REGS_X8632);
-	REG32(eng, eax,    REGS_X8632);
-	REG32(eng, ebx,    REGS_X8632);
-	REG32(eng, ecx,    REGS_X8632);
-	REG32(eng, edx,    REGS_X8632);
-	REG32(eng, edi,    REGS_X8632);
-	REG32(eng, esi,    REGS_X8632);
 }
 
 void common_arm_dump_registers(engine_t *eng)

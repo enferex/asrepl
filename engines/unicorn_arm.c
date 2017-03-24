@@ -33,6 +33,7 @@
 #include "../config.h"
 #ifdef HAVE_LIBUNICORN
 
+#include "common.h"
 #include "unicorn.h"
 #include "../asrepl_types.h"
 
@@ -68,8 +69,8 @@ const engine_desc_t *unicorn_arm_registration(void)
     static const engine_desc_t desc = {
         .type           = ENGINE_UNICORN_ARM,
         .init           = unicorn_init,
-        .execute        = unicorn_arm_execute,
-        .shutdown       = unicorn_arm_shutdown,
+        .execute        = unicorn_execute,
+        .shutdown       = unicorn_shutdown,
         .read_registers = unicorn_arm_read_registers,
         .dump_registers = common_arm_dump_registers
     };

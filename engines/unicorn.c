@@ -106,8 +106,9 @@ _Bool unicorn_init(asrepl_t *asr, engine_t *eng)
     context = NULL;
     err     = uc_context_alloc(uc, &context);
     if (err != UC_ERR_OK) {
-        ERR("Failed to allocate Unicorn context struct: %s",
-                uc_strerror(err));
+        ERR("Failed to allocate Unicorn context struct "
+            "[uc_context_alloc()]: %s",
+            uc_strerror(err));
         return false;
     }
     eng->state = (engine_h)context;
@@ -148,6 +149,43 @@ _Bool unicorn_shutdown(engine_t *eng)
 
     uc_close(uc);
     return true;
+}
+
+void unicorn_execute(engine_t *eng, const ctx_t *ctx)
+{
+    uc_err err;
+    uc_engine *uc = (uc_engine *)eng->handle;
+    uc_context *context = (uc_context*)eng->state;
+    
+    err = uc_mem_write(uc, UC_TEXT_ADDR, ctx->text, ctx->length);
+    if (err != UC_ERR_OK) {
+        ERR("Failed to write ops to execution memory [uc_mem_write()]: %s",
+            uc_strerror(err));
+        return;
+    }
+
+    if (context) {
+        err = uc_context_restore(uc, context);
+        if (err != UC_ERR_OK) {
+            ERR("Failed to restore unicorn execution context "
+                "[uc_context_restore()]: %s",
+                uc_strerror(err));
+            return;
+        }
+    }
+
+    err = uc_emu_start(uc, UC_TEXT_ADDR, UC_TEXT_ADDR+ctx->length, 0, 0);
+    if (err) {
+        ERR("Failed to start emulation [uc_emu_start()]: %s", uc_strerror(err));
+        return;
+    }
+
+    err = uc_context_save(uc, context);
+    if (err != UC_ERR_OK) {
+        ERR("Failed to save the unicorn context [uc_context_save()]: %s",
+            uc_strerror(err));
+        return;
+    }
 }
 
 #endif /* HAVE_LIBUNICORN */

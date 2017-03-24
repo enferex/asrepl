@@ -74,7 +74,7 @@ engine_t *engine_init(asrepl_t *asr, engine_e type)
     sanity(eng, type);
 
 	/* Initialize the engine */
-	if (eng->desc->init(eng) == false)
+	if (eng->desc->init(asr, eng) == false)
       ERF("Error initializing the engine.");
 
 	return eng;

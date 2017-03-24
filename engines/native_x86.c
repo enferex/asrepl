@@ -58,7 +58,7 @@ static void native_x8664_read_registers(engine_t *eng)
     REGS_X8664(eng).r15     = regs.r15;
 }
 
-static _Bool native_x8664_init(engine_t *eng)
+static _Bool native_x8664_init(asrepl_t *asr, engine_t *eng)
 {
     eng->handle = calloc(1, sizeof(pid_t));
     if (!eng->handle)

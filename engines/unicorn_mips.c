@@ -33,8 +33,8 @@
 #include "../config.h"
 #ifdef HAVE_LIBUNICORN
 
-#include "unicorn.h"
 #include "common.h"
+#include "unicorn.h"
 #include "../asrepl_types.h"
 
 static void unicorn_mips32_read_registers(engine_t *eng)
@@ -42,43 +42,43 @@ static void unicorn_mips32_read_registers(engine_t *eng)
 #define R(_eng, _reg) (&(REGS_MIPS32(_eng)._reg))
     engine_h handle = eng;
 
-	uc_reg_read(handle, UC_MIPS_REG_GP, &gp);
-	uc_reg_read(handle, UC_MIPS_REG_SP, &sp);
-	uc_reg_read(handle, UC_MIPS_REG_FP, &fp);
-	uc_reg_read(eng, UC_MIPS_REG_RA, &ra);
+	uc_reg_read(handle, UC_MIPS_REG_GP, R(eng,gp));
+	uc_reg_read(handle, UC_MIPS_REG_SP, R(eng,sp));
+	uc_reg_read(handle, UC_MIPS_REG_FP, R(eng,fp));
+	uc_reg_read(handle, UC_MIPS_REG_RA, R(eng,ra));
 
-	uc_reg_read(eng, UC_MIPS_REG_ZERO, &zero);
-	uc_reg_read(eng, UC_MIPS_REG_AT, &at);
-	uc_reg_read(eng, UC_MIPS_REG_V0, &v0);
-	uc_reg_read(eng, UC_MIPS_REG_V1, &v1);
+	uc_reg_read(handle, UC_MIPS_REG_ZERO, R(eng,zero));
+	uc_reg_read(handle, UC_MIPS_REG_AT,   R(eng,at));
+	uc_reg_read(handle, UC_MIPS_REG_V0,   R(eng,v0));
+	uc_reg_read(handle, UC_MIPS_REG_V1,   R(eng,v1));
 
-	uc_reg_read(eng, UC_MIPS_REG_A0, &a0);
-	uc_reg_read(eng, UC_MIPS_REG_A1, &a1);
-	uc_reg_read(eng, UC_MIPS_REG_A2, &a2);
-	uc_reg_read(eng, UC_MIPS_REG_A3, &a3);
+	uc_reg_read(handle, UC_MIPS_REG_A0, R(eng,a0));
+	uc_reg_read(handle, UC_MIPS_REG_A1, R(eng,a1));
+	uc_reg_read(handle, UC_MIPS_REG_A2, R(eng,a2));
+	uc_reg_read(handle, UC_MIPS_REG_A3, R(eng,a3));
 
-	uc_reg_read(eng, UC_MIPS_REG_T0, &t0);
-	uc_reg_read(eng, UC_MIPS_REG_T1, &t1);
-	uc_reg_read(eng, UC_MIPS_REG_T2, &t2);
-	uc_reg_read(eng, UC_MIPS_REG_T3, &t3);
-	uc_reg_read(eng, UC_MIPS_REG_T4, &t4);
-	uc_reg_read(eng, UC_MIPS_REG_T5, &t5);
-	uc_reg_read(eng, UC_MIPS_REG_T6, &t6);
-	uc_reg_read(eng, UC_MIPS_REG_T7, &t7);
-	uc_reg_read(eng, UC_MIPS_REG_T8, &t8);
-	uc_reg_read(eng, UC_MIPS_REG_T9, &t9);
+	uc_reg_read(handle, UC_MIPS_REG_T0, R(eng,t0));
+	uc_reg_read(handle, UC_MIPS_REG_T1, R(eng,t1));
+	uc_reg_read(handle, UC_MIPS_REG_T2, R(eng,t2));
+	uc_reg_read(handle, UC_MIPS_REG_T3, R(eng,t3));
+	uc_reg_read(handle, UC_MIPS_REG_T4, R(eng,t4));
+	uc_reg_read(handle, UC_MIPS_REG_T5, R(eng,t5));
+	uc_reg_read(handle, UC_MIPS_REG_T6, R(eng,t6));
+	uc_reg_read(handle, UC_MIPS_REG_T7, R(eng,t7));
+	uc_reg_read(handle, UC_MIPS_REG_T8, R(eng,t8));
+	uc_reg_read(handle, UC_MIPS_REG_T9, R(eng,t9));
 
-	uc_reg_read(eng, UC_MIPS_REG_S0, &s0);
-	uc_reg_read(eng, UC_MIPS_REG_S1, &s1);
-	uc_reg_read(eng, UC_MIPS_REG_S2, &s2);
-	uc_reg_read(eng, UC_MIPS_REG_S3, &s3);
-	uc_reg_read(eng, UC_MIPS_REG_S4, &s4);
-	uc_reg_read(eng, UC_MIPS_REG_S5, &s5);
-	uc_reg_read(eng, UC_MIPS_REG_S6, &s6);
-	uc_reg_read(eng, UC_MIPS_REG_S7, &s7);
+	uc_reg_read(handle, UC_MIPS_REG_S0, R(eng,s0));
+	uc_reg_read(handle, UC_MIPS_REG_S1, R(eng,s1));
+	uc_reg_read(handle, UC_MIPS_REG_S2, R(eng,s2));
+	uc_reg_read(handle, UC_MIPS_REG_S3, R(eng,s3));
+	uc_reg_read(handle, UC_MIPS_REG_S4, R(eng,s4));
+	uc_reg_read(handle, UC_MIPS_REG_S5, R(eng,s5));
+	uc_reg_read(handle, UC_MIPS_REG_S6, R(eng,s6));
+	uc_reg_read(handle, UC_MIPS_REG_S7, R(eng,s7));
 
-	uc_reg_read(eng, UC_MIPS_REG_K0, &k0);
-	uc_reg_read(eng, UC_MIPS_REG_K1, &k1);
+	uc_reg_read(handle, UC_MIPS_REG_K0, R(eng,k0));
+	uc_reg_read(handle, UC_MIPS_REG_K1, R(eng,k1));
 }
 
 /*
@@ -97,3 +97,5 @@ const engine_desc_t *unicorn_mips32_registration(void)
 
     return &desc;
 }
+
+#endif /* HAVE_LIBUNICORN */

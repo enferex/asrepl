@@ -34,9 +34,10 @@
 #define __COMMON_H
 #include "../asrepl_types.h"
 
+extern void common_x8632_dump_registers(engine_t *eng);
 extern void common_x8664_dump_registers(engine_t *eng);
 extern void common_arm_dump_registers(engine_t *eng);
-extern void common_mips_dump_registers(engine_t *eng);
+extern void common_mips32_dump_registers(engine_t *eng);
 
 #endif /* __COMMON_H */
 

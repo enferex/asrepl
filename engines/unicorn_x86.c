@@ -101,7 +101,7 @@ const engine_desc_t *unicorn_x8632_registration(void)
         .execute        = unicorn_execute,
         .shutdown       = unicorn_shutdown,
         .read_registers = unicorn_x8632_read_registers,
-        .dump_registers = unicorn_x8632_dump_registers
+        .dump_registers = common_x8632_dump_registers
     };
 
     return &desc;
