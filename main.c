@@ -46,9 +46,14 @@
 #include "assembler.h"
 #include "engine.h"
 #include "config.h"
+#ifdef HAVE_LIBUNICORN
+#include "engines/unicorn.h"
+#endif
 
 static void usage(const char *execname)
 {
+    assert(execname);
+
     printf("Usage: %s [-h] [-v] "
 #ifdef MULTI_ARCH
            "[-a ARCH]"
@@ -127,7 +132,7 @@ int main(int argc, char **argv)
 #ifdef MULTI_ARCH
         case 'a':
 		  isa_type       = isa_from_string(optarg);
-		  engine_type    = ENGINE_UNICORN;
+		  engine_type    = unicorn_engine_from_isa(isa_type);;
 		  assembler_type = ASSEMBLER_KEYSTONE;
 		  break;
 #endif

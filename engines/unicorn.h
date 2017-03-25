@@ -39,9 +39,10 @@
 
 #define UC_TEXT_ADDR 0x10000000
 
-extern _Bool unicorn_init(asrepl_t *asr, engine_t *eng);
-extern _Bool unicorn_shutdown(engine_t *eng);
-extern void  unicorn_execute(engine_t *eng, const ctx_t *ctx);
+extern _Bool    unicorn_init(asrepl_t *asr, engine_t *eng);
+extern _Bool    unicorn_shutdown(engine_t *eng);
+extern void     unicorn_execute(engine_t *eng, const ctx_t *ctx);
+extern engine_e unicorn_engine_from_isa(isa_e isa);
 
 #endif /* HAVE_LIBUNICORN */
 #endif /* __ASREPL_UNICORN_H */

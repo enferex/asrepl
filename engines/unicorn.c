@@ -188,4 +188,19 @@ void unicorn_execute(engine_t *eng, const ctx_t *ctx)
     }
 }
 
+engine_e unicorn_engine_from_isa(isa_e isa)
+{
+    switch (isa)
+    {
+        case ISA_X8632:   return ENGINE_UNICORN_X8632;
+        case ISA_X8664:   return ENGINE_UNICORN_X8664;
+        case ISA_ARM:     return ENGINE_UNICORN_ARM;
+        case ISA_ARM64:   return ENGINE_UNICORN_ARM;
+        case ISA_MIPS32:  return ENGINE_UNICORN_MIPS32;
+        case ISA_UNKNOWN: return ENGINE_INVALID;
+    }
+
+    return ENGINE_INVALID;
+}
+
 #endif /* HAVE_LIBUNICORN */

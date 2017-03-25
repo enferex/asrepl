@@ -60,12 +60,13 @@ static void native_x8664_read_registers(engine_t *eng)
 
 static _Bool native_x8664_init(asrepl_t *asr, engine_t *eng)
 {
+    uint64_t pid;
+
     eng->handle = calloc(1, sizeof(pid_t));
     if (!eng->handle)
         ERF("Could not allocate enough memory to represent an engine handle.");
 
-    const uint64_t pid = fork();
-
+    pid = fork();
     eng->engine_pid = pid;
 
     if (pid > 0) {

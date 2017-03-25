@@ -66,18 +66,22 @@ static void sanity(const engine_t *eng, engine_e type)
 
 engine_t *engine_init(asrepl_t *asr, engine_e type)
 {
-	engine_t *eng = calloc(1, sizeof(engine_t));
-	if (!eng)
-		ERF("Could not allocate enough memory to represent an engine.");
+    engine_t *eng;
 
-	eng->desc = get_desc(type);
+    if (type <= ENGINE_INVALID || type >= ENGINE_MAX)
+      ERF("Invalid engine selected.");
+   
+    if (!(eng = calloc(1, sizeof(engine_t))))
+      ERF("Could not allocate enough memory to represent an engine.");
+
+    eng->desc = get_desc(type);
     sanity(eng, type);
 
-	/* Initialize the engine */
-	if (eng->desc->init(asr, eng) == false)
+    /* Initialize the engine */
+    if (eng->desc->init(asr, eng) == false)
       ERF("Error initializing the engine.");
 
-	return eng;
+    return eng;
 }
 
 void engine_execute(engine_t *eng, const ctx_t *ctx)
