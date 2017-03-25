@@ -41,6 +41,7 @@
 #include "asrepl_types.h"
 #include "assembler.h"
 #include "engine.h"
+#include "registers.h"
 #include "config.h"
 
 /* Declared in asrepl.h */
@@ -332,7 +333,8 @@ void asrepl_macro_execute(asrepl_t *asr, const char *name)
 isa_e isa_from_string(const char *isa_str)
 {
     for (int i=0; i<sizeof(isa_names)/sizeof(isa_names[0]); ++i)
-      if (strncmp(isa_names[i], isa_str, strlen(isa_names[i])) == 0)
+      if (isa_names[i] &&
+          strncmp(isa_names[i], isa_str, strlen(isa_names[i])) == 0)
         return (isa_e)i;
 
     return ISA_UNKNOWN;
@@ -344,8 +346,10 @@ const char* isa_all_names(void)
     static char buffer[256] = {0};
 
     for (int i=0; i<sizeof(isa_names)/sizeof(isa_names[0]); ++i) {
-        strcat(buffer, isa_names[i]);
-        strcat(buffer, " ");
+        if (isa_names[i]) {
+            strcat(buffer, isa_names[i]);
+            strcat(buffer, " ");
+        }
     }
 
     return buffer;
