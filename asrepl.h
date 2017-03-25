@@ -45,7 +45,9 @@
 #define MINOR      1
 #define YEAR       2017
 #define TAG        "asm"
-#define MULTI_ARCH (HAVE_LIBUNICORN && HAVE_LIBKEYSTONE)
+#if defined(HAVE_LIBUNICORN) && defined(HAVE_LIBKEYSTONE)
+#define MULTI_ARCH
+#endif
 
 /* Maximum length of an accepted ASM statement (instruction)...
  * 128 seems way large, but for now that's what we're capping at.
