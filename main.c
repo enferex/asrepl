@@ -53,16 +53,14 @@ static void usage(const char *execname)
 #ifdef MULTI_ARCH
            "[-a ARCH]"
 #endif
-           "\n"
-           " -h: This help message.\n"
+           "\n", execname);
+    printf(" -h: This help message.\n"
            " -v: Version information.\n"
 #ifdef MULTI_ARCH
-           " -a ARCH: Architecture to emulate:(%s)"
+           " -a ARCH: Architectures to emulate:( %s)\n"
            , isa_all_names()
 #endif
-           , execname);
-
-
+           );
 }
 
 /* Main loop of execution */
