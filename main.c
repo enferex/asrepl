@@ -131,7 +131,10 @@ int main(int argc, char **argv)
 		  assembler_type = ASSEMBLER_KEYSTONE;
 		  break;
 #endif
-        default: break;
+        case '?':
+        default:
+            exit(EXIT_FAILURE);
+            break;
         }
     }
 
