@@ -156,7 +156,7 @@ void unicorn_execute(engine_t *eng, const ctx_t *ctx)
     uc_err err;
     uc_engine *uc = (uc_engine *)eng->handle;
     uc_context *context = (uc_context*)eng->state;
-    
+
     err = uc_mem_write(uc, UC_TEXT_ADDR, ctx->text, ctx->length);
     if (err != UC_ERR_OK) {
         ERR("Failed to write ops to execution memory [uc_mem_write()]: %s",
