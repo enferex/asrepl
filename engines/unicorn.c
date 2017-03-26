@@ -103,8 +103,7 @@ _Bool unicorn_init(asrepl_t *asr, engine_t *eng)
         return false;
     }
 
-    context = NULL;
-    err     = uc_context_alloc(uc, &context);
+    err = uc_context_alloc(uc, &context);
     if (err != UC_ERR_OK) {
         ERR("Failed to allocate Unicorn context struct "
             "[uc_context_alloc()]: %s",
