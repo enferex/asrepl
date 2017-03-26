@@ -6,7 +6,7 @@ at the register state.
 
 How asrepl Works
 ----------------
-asrepl works by the following steps:
+asrepl works by the following steps when not using Unicorn + Keystone:
 
 1. Fork a process that will be used to execute user supplied asm.  The
    terminology to recognize is: "The parent process forks the child process."
@@ -30,19 +30,25 @@ Building
 
 Notes
 -----
+* mips32 support is not functioning.
 * This tool is alpha. (Lame excuse if something doesn't work).
 * This tool creates and overwrites two files: .asrepl.foo.s, .asrepl.foo.o.  Be
   aware if you already have those files.  Additionally, since asrepl leaves
   these files around, ensure that you do not leave any super secret leet asm
   marinating, or others might get your leet secretz.
 
-Dependencies
+Dependencies (for default x8664 asm operation)
 ------------
 1. GNU readline library, you probably have this.
 2. x86-64 bit architecture.
 3. An assembler, ideally GNU as: https://www.gnu.org/software/binutils/
 3. I've only tested this on Linux.
-4. Optional: Keystone and Unicorn Engine
+4. Optional: Keystone and Unicorn Engine (for arm, mips, x8632 support).
+
+Thanks
+------
+Special thanks goes out to sibios who charged the Keystone in Unicorn support.
+That feature allows asrepl act as a repl for a multitude of architectures.
 
 Contact
 -------
