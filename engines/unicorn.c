@@ -71,7 +71,7 @@ static void unicorn_set_config(engine_t *eng, isa_e isa)
 
     case ISA_MIPS32:
         eng->march = UC_ARCH_MIPS;
-        eng->mmode = UC_MODE_MIPS32;
+        eng->mmode = UC_MODE_MIPS32 | UC_MODE_BIG_ENDIAN;
         break;
 
     default:
@@ -116,10 +116,10 @@ _Bool unicorn_init(asrepl_t *asr, engine_t *eng)
     /* Base address to bottom of 2MB alloc, less 1KB for padding. */
     r_sp = UC_TEXT_ADDR + 0x200000 - 0x400;
     switch(eng->march) {
-    case UC_ARCH_X86: uc_reg_write(uc, UC_X86_REG_ESP, &r_sp); break;
-    case UC_ARCH_ARM: uc_reg_write(uc, UC_ARM_REG_SP,  &r_sp); break;
+    case UC_ARCH_X86:   uc_reg_write(uc, UC_X86_REG_ESP, &r_sp); break;
+    case UC_ARCH_ARM:   uc_reg_write(uc, UC_ARM_REG_SP,  &r_sp); break;
     case UC_ARCH_ARM64: uc_reg_write(uc, UC_ARM_REG_SP,  &r_sp); break;
-    case UC_ARCH_MIPS:uc_reg_write(uc, UC_MIPS_REG_SP, &r_sp); break;
+    case UC_ARCH_MIPS:  uc_reg_write(uc, UC_MIPS_REG_SP, &r_sp); break;
     default: ERF("Invalid march specified.");
     }
 
@@ -137,7 +137,7 @@ _Bool unicorn_init(asrepl_t *asr, engine_t *eng)
 
 _Bool unicorn_shutdown(engine_t *eng)
 {
-    uc_engine *uc = (uc_engine *)eng->handle;
+    uc_engine *uc       = (uc_engine *)eng->handle;
     uc_context *context = (uc_context *)eng->state;
 
     if (!uc)

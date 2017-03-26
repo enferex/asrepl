@@ -220,7 +220,7 @@ static void keystone_set_config(assembler_t *as, isa_e isa)
 
     case ISA_MIPS32:
         as->march = KS_ARCH_MIPS;
-        as->mmode = KS_MODE_MIPS32;
+        as->mmode = KS_MODE_MIPS32 | KS_MODE_BIG_ENDIAN;
         break;
 
     default:

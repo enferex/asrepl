@@ -90,63 +90,63 @@ void common_x8664_dump_registers(engine_t *eng)
 
 void common_arm_dump_registers(engine_t *eng)
 {
-	REG32(eng, pc,   REGS_ARM);
+    REG32(eng, pc,   REGS_ARM);
     REG32(eng, cpsr, REGS_ARM);
-	REG32(eng, sp,   REGS_ARM);
-	REG32(eng, lr,   REGS_ARM);
-	REG32(eng, r0,   REGS_ARM);
-	REG32(eng, r1,   REGS_ARM);
-	REG32(eng, r2,   REGS_ARM);
-	REG32(eng, r3,   REGS_ARM);
-	REG32(eng, r4,   REGS_ARM);
-	REG32(eng, r5,   REGS_ARM);
-	REG32(eng, r6,   REGS_ARM);
-	REG32(eng, r7,   REGS_ARM);
-	REG32(eng, r8,   REGS_ARM);
-	REG32(eng, r9,   REGS_ARM);
-	REG32(eng, r10,  REGS_ARM);
-	REG32(eng, r11,  REGS_ARM);
-	REG32(eng, r12,  REGS_ARM);
+    REG32(eng, sp,   REGS_ARM);
+    REG32(eng, lr,   REGS_ARM);
+    REG32(eng, r0,   REGS_ARM);
+    REG32(eng, r1,   REGS_ARM);
+    REG32(eng, r2,   REGS_ARM);
+    REG32(eng, r3,   REGS_ARM);
+    REG32(eng, r4,   REGS_ARM);
+    REG32(eng, r5,   REGS_ARM);
+    REG32(eng, r6,   REGS_ARM);
+    REG32(eng, r7,   REGS_ARM);
+    REG32(eng, r8,   REGS_ARM);
+    REG32(eng, r9,   REGS_ARM);
+    REG32(eng, r10,  REGS_ARM);
+    REG32(eng, r11,  REGS_ARM);
+    REG32(eng, r12,  REGS_ARM);
 }
 
 void common_mips32_dump_registers(engine_t *eng)
 {
-	REG32(eng, pc,   REGS_MIPS32);
-	REG32(eng, gp,   REGS_MIPS32);
-	REG32(eng, sp,   REGS_MIPS32);
-	REG32(eng, fp,   REGS_MIPS32);
-	REG32(eng, ra,   REGS_MIPS32);
+    REG32(eng, pc,   REGS_MIPS32);
+    REG32(eng, gp,   REGS_MIPS32);
+    REG32(eng, sp,   REGS_MIPS32);
+    REG32(eng, fp,   REGS_MIPS32);
+    REG32(eng, ra,   REGS_MIPS32);
 
-	REG32(eng, zero, REGS_MIPS32);
-	REG32(eng, at,   REGS_MIPS32);
-	REG32(eng, v0,   REGS_MIPS32);
-	REG32(eng, v1,   REGS_MIPS32);
+    REG32(eng, zero, REGS_MIPS32);
+    REG32(eng, at,   REGS_MIPS32);
+    REG32(eng, v0,   REGS_MIPS32);
+    REG32(eng, v1,   REGS_MIPS32);
 
-	REG32(eng, a0,   REGS_MIPS32);
-	REG32(eng, a1,   REGS_MIPS32);
-	REG32(eng, a2,   REGS_MIPS32);
-	REG32(eng, a3,   REGS_MIPS32);
+    REG32(eng, a0,   REGS_MIPS32);
+    REG32(eng, a1,   REGS_MIPS32);
+    REG32(eng, a2,   REGS_MIPS32);
+    REG32(eng, a3,   REGS_MIPS32);
 
-	REG32(eng, t0,   REGS_MIPS32);
-	REG32(eng, t1,   REGS_MIPS32);
-	REG32(eng, t2,   REGS_MIPS32);
-	REG32(eng, t3,   REGS_MIPS32);
-	REG32(eng, t4,   REGS_MIPS32);
-	REG32(eng, t5,   REGS_MIPS32);
-	REG32(eng, t6,   REGS_MIPS32);
-	REG32(eng, t7,   REGS_MIPS32);
-	REG32(eng, t8,   REGS_MIPS32);
-	REG32(eng, t9,   REGS_MIPS32);
+    REG32(eng, t0,   REGS_MIPS32);
+    REG32(eng, t1,   REGS_MIPS32);
+    REG32(eng, t2,   REGS_MIPS32);
+    REG32(eng, t3,   REGS_MIPS32);
+    REG32(eng, t4,   REGS_MIPS32);
+    REG32(eng, t5,   REGS_MIPS32);
+    REG32(eng, t6,   REGS_MIPS32);
+    REG32(eng, t7,   REGS_MIPS32);
+    REG32(eng, t8,   REGS_MIPS32);
+    REG32(eng, t9,   REGS_MIPS32);
 
-	REG32(eng, s0,   REGS_MIPS32);
-	REG32(eng, s1,   REGS_MIPS32);
-	REG32(eng, s2,   REGS_MIPS32);
-	REG32(eng, s3,   REGS_MIPS32);
-	REG32(eng, s4 ,  REGS_MIPS32);
-	REG32(eng, s5,   REGS_MIPS32);
-	REG32(eng, s6,   REGS_MIPS32);
-	REG32(eng, s7,   REGS_MIPS32);
+    REG32(eng, s0,   REGS_MIPS32);
+    REG32(eng, s1,   REGS_MIPS32);
+    REG32(eng, s2,   REGS_MIPS32);
+    REG32(eng, s3,   REGS_MIPS32);
+    REG32(eng, s4 ,  REGS_MIPS32);
+    REG32(eng, s5,   REGS_MIPS32);
+    REG32(eng, s6,   REGS_MIPS32);
+    REG32(eng, s7,   REGS_MIPS32);
 
-	REG32(eng, k0,   REGS_MIPS32);
-	REG32(eng, k1,   REGS_MIPS32);
+    REG32(eng, k0,   REGS_MIPS32);
+    REG32(eng, k1,   REGS_MIPS32);
 }
