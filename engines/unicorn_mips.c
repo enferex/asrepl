@@ -42,6 +42,7 @@ static void unicorn_mips32_read_registers(engine_t *eng)
 #define R(_eng, _reg) (&(REGS_MIPS32(_eng)._reg))
     engine_h handle = eng;
 
+	uc_reg_read(handle, UC_MIPS_REG_PC, R(eng,pc));
 	uc_reg_read(handle, UC_MIPS_REG_GP, R(eng,gp));
 	uc_reg_read(handle, UC_MIPS_REG_SP, R(eng,sp));
 	uc_reg_read(handle, UC_MIPS_REG_FP, R(eng,fp));

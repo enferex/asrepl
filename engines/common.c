@@ -111,6 +111,7 @@ void common_arm_dump_registers(engine_t *eng)
 
 void common_mips32_dump_registers(engine_t *eng)
 {
+	REG32(eng, pc,   REGS_MIPS32);
 	REG32(eng, gp,   REGS_MIPS32);
 	REG32(eng, sp,   REGS_MIPS32);
 	REG32(eng, fp,   REGS_MIPS32);

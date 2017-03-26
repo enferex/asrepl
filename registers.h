@@ -85,7 +85,7 @@ typedef struct _arm_regs_t
 
 typedef struct _mips32_regs_t
 {
-    uint32_t gp, sp, fp, ra;
+    uint32_t gp, sp, fp, ra, pc;
     uint32_t zero, at, v0, v1;
     uint32_t a0, a1, a2, a3;
     uint32_t t0, t1, t2, t3, t4, t5, t6, t7, t8, t9;
