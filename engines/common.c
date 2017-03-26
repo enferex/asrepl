@@ -42,8 +42,8 @@
 
 void common_x8632_dump_registers(engine_t *eng)
 {
-    REG32(eng, eflags, REGS_X8632);
     REG32(eng, eip,    REGS_X8632);
+    REG32(eng, eflags, REGS_X8632);
     REG32(eng, cs,     REGS_X8632);
     REG32(eng, ds,     REGS_X8632);
     REG32(eng, es,     REGS_X8632);
@@ -62,8 +62,8 @@ void common_x8632_dump_registers(engine_t *eng)
 
 void common_x8664_dump_registers(engine_t *eng)
 {
-    REG64(eng, eflags, REGS_X8664);
     REG64(eng, rip,    REGS_X8664);
+    REG64(eng, eflags, REGS_X8664);
     REG64(eng, cs,     REGS_X8664);
     REG64(eng, ds,     REGS_X8664);
     REG64(eng, es,     REGS_X8664);
@@ -90,8 +90,8 @@ void common_x8664_dump_registers(engine_t *eng)
 
 void common_arm_dump_registers(engine_t *eng)
 {
-	REG32(eng, cpsr, REGS_ARM);
 	REG32(eng, pc,   REGS_ARM);
+    REG32(eng, cpsr, REGS_ARM);
 	REG32(eng, sp,   REGS_ARM);
 	REG32(eng, lr,   REGS_ARM);
 	REG32(eng, r0,   REGS_ARM);
