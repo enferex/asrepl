@@ -175,7 +175,7 @@ void unicorn_execute(engine_t *eng, const ctx_t *ctx)
     }
 
     err = uc_emu_start(uc, UC_TEXT_ADDR, UC_TEXT_ADDR+ctx->length, 0, 0);
-    if (err) {
+    if (err != UC_ERR_OK) {
         ERR("Failed to start emulation [uc_emu_start()]: %s", uc_strerror(err));
         return;
     }
