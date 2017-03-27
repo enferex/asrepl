@@ -30,37 +30,19 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
-#include <stdio.h>
+#ifndef __ASREPL_UNICORN_H
+#define __ASREPL_UNICORN_H
+
 #include "../asrepl_types.h"
-#include "common.h"
+#include "../config.h"
+#ifdef HAVE_LIBUNICORN
 
-#define REG64(_eng, _reg) \
-    printf("%s\t 0x%lx\n", #_reg, REGS_X8664(_eng)._reg)
+#define UC_TEXT_ADDR 0x10000000
 
-void common_x8664_dump_registers(engine_t *eng)
-{
-    REG64(eng, eflags);
-    REG64(eng, rip);
-    REG64(eng, cs);
-    REG64(eng, ds);
-    REG64(eng, es);
-    REG64(eng, fs);
-    REG64(eng, gs);
-    REG64(eng, ss);
-    REG64(eng, rbp);
-    REG64(eng, rsp);
-    REG64(eng, rax);
-    REG64(eng, rbx);
-    REG64(eng, rcx);
-    REG64(eng, rdx);
-    REG64(eng, rdi);
-    REG64(eng, rsi);
-    REG64(eng, r8);
-    REG64(eng, r9);
-    REG64(eng, r10);
-    REG64(eng, r11);
-    REG64(eng, r12);
-    REG64(eng, r13);
-    REG64(eng, r14);
-    REG64(eng, r15);
-}
+extern _Bool    unicorn_init(asrepl_t *asr, engine_t *eng);
+extern _Bool    unicorn_shutdown(engine_t *eng);
+extern void     unicorn_execute(engine_t *eng, const ctx_t *ctx);
+extern engine_e unicorn_engine_from_isa(isa_e isa);
+
+#endif /* HAVE_LIBUNICORN */
+#endif /* __ASREPL_UNICORN_H */

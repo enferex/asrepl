@@ -32,7 +32,7 @@ static void native_x8664_read_registers(engine_t *eng)
 
     get_registers(pid, &regs);
 
-    REGS_X8664(eng).eflags = regs.eflags;
+    REGS_X8664(eng).eflags  = regs.eflags;
     REGS_X8664(eng).rip     = regs.rip;
     REGS_X8664(eng).cs      = regs.cs;
     REGS_X8664(eng).ds      = regs.ds;
@@ -58,14 +58,15 @@ static void native_x8664_read_registers(engine_t *eng)
     REGS_X8664(eng).r15     = regs.r15;
 }
 
-static _Bool native_x8664_init(engine_t *eng)
+static _Bool native_x8664_init(asrepl_t *asr, engine_t *eng)
 {
+    uint64_t pid;
+
     eng->handle = calloc(1, sizeof(pid_t));
     if (!eng->handle)
         ERF("Could not allocate enough memory to represent an engine handle.");
 
-    const uint64_t pid = fork();
-
+    pid = fork();
     eng->engine_pid = pid;
 
     if (pid > 0) {
@@ -163,7 +164,7 @@ static void native_x8664_execute(engine_t *eng, const ctx_t *ctx)
 const engine_desc_t *native_x8664_registration(void)
 {
     static const engine_desc_t desc = {
-        .type           = ENGINE_NATIVE,
+        .type           = ENGINE_NATIVE_X8664,
         .init           = native_x8664_init,
         .execute        = native_x8664_execute,
         .shutdown       = native_x8664_shutdown,

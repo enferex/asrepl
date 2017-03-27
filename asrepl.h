@@ -38,12 +38,16 @@
 #include <sys/types.h>
 #include <sys/user.h>
 #include "asrepl_types.h"
+#include "config.h"
 
-#define NAME    "asrepl"
-#define MAJOR   0
-#define MINOR   1
-#define YEAR    2017
-#define TAG     "asm"
+#define NAME       "asrepl"
+#define MAJOR      0
+#define MINOR      1
+#define YEAR       2017
+#define TAG        "asm"
+#if defined(HAVE_LIBUNICORN) && defined(HAVE_LIBKEYSTONE)
+#define MULTI_ARCH
+#endif
 
 /* Maximum length of an accepted ASM statement (instruction)...
  * 128 seems way large, but for now that's what we're capping at.
@@ -78,7 +82,8 @@
 typedef unsigned long word_t;
 
 /* Initialize asrepl: Sets up the assembler and execution engine */
-extern asrepl_t *asrepl_init(assembler_e type, engine_e engine);
+extern asrepl_t *asrepl_init(isa_e isa_type, assembler_e type, engine_e engine);
+extern void asrepl_version(void);
 
 /* Utilities */
 extern char *prompt;

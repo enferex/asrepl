@@ -30,75 +30,52 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
-#include <assert.h>
-#include <stdbool.h>
-#include "asrepl.h"
-#include "asrepl_types.h"
-#include "config.h"
-#include "engines/registration.h"
+#include "../config.h"
+#ifdef HAVE_LIBUNICORN
 
-static const engine_desc_t *get_desc(engine_e type)
+#include "common.h"
+#include "unicorn.h"
+#include "../asrepl_types.h"
+
+static void unicorn_arm_read_registers(engine_t *eng)
 {
-    const int n_regs = sizeof(engine_registrations) /
-                       sizeof(engine_registrations[0]);
+#define R(_eng, _reg) (&(REGS_ARM(_eng)._reg))
+    engine_h handle = eng->handle;
 
-    for (int i=0; i<n_regs; ++i) {
-        const engine_desc_t *desc = engine_registrations[i]();
-        if (desc && desc->type == type)
-          return desc;
-    }
-
-    return NULL;
+    uc_reg_read(handle, UC_ARM_REG_CPSR, R(eng, cpsr));
+	uc_reg_read(handle, UC_ARM_REG_PC,   R(eng, pc));
+	uc_reg_read(handle, UC_ARM_REG_SP,   R(eng, sp));
+	uc_reg_read(handle, UC_ARM_REG_LR,   R(eng, lr));
+	uc_reg_read(handle, UC_ARM_REG_R0,   R(eng, r0));
+	uc_reg_read(handle, UC_ARM_REG_R1,   R(eng, r1));
+	uc_reg_read(handle, UC_ARM_REG_R2,   R(eng, r2));
+	uc_reg_read(handle, UC_ARM_REG_R3,   R(eng, r3));
+	uc_reg_read(handle, UC_ARM_REG_R4,   R(eng, r4));
+	uc_reg_read(handle, UC_ARM_REG_R5,   R(eng, r5));
+	uc_reg_read(handle, UC_ARM_REG_R6,   R(eng, r6));
+	uc_reg_read(handle, UC_ARM_REG_R7,   R(eng, r7));
+	uc_reg_read(handle, UC_ARM_REG_R8,   R(eng, r8));
+	uc_reg_read(handle, UC_ARM_REG_R9,   R(eng, r9));
+	uc_reg_read(handle, UC_ARM_REG_R10,  R(eng, r10));
+	uc_reg_read(handle, UC_ARM_REG_R11,  R(eng, r11));
+	uc_reg_read(handle, UC_ARM_REG_R12,  R(eng, r12));
 }
 
-/* Ensure a complete desc */
-static void sanity(const engine_t *eng, engine_e type)
+/*
+ * REGISTRATION
+ */
+const engine_desc_t *unicorn_arm_registration(void)
 {
-    assert(eng);
-    assert(eng->desc);
-    assert(eng->desc->type == type);
-    assert(eng->desc->init);
-    assert(eng->desc->execute);
-    assert(eng->desc->shutdown);
-    assert(eng->desc->read_registers);
-    assert(eng->desc->dump_registers);
+    static const engine_desc_t desc = {
+        .type           = ENGINE_UNICORN_ARM,
+        .init           = unicorn_init,
+        .execute        = unicorn_execute,
+        .shutdown       = unicorn_shutdown,
+        .read_registers = unicorn_arm_read_registers,
+        .dump_registers = common_arm_dump_registers
+    };
+
+    return &desc;
 }
 
-engine_t *engine_init(asrepl_t *asr, engine_e type)
-{
-    engine_t *eng;
-
-    if (type <= ENGINE_INVALID || type >= ENGINE_MAX)
-      ERF("Invalid engine selected.");
-   
-    if (!(eng = calloc(1, sizeof(engine_t))))
-      ERF("Could not allocate enough memory to represent an engine.");
-
-    eng->desc = get_desc(type);
-    sanity(eng, type);
-
-    /* Initialize the engine */
-    if (eng->desc->init(asr, eng) == false)
-      ERF("Error initializing the engine.");
-
-    return eng;
-}
-
-void engine_execute(engine_t *eng, const ctx_t *ctx)
-{
-    assert(ctx && eng && eng->desc);
-    return eng->desc->execute(eng, ctx);
-}
-
-void engine_read_registers(engine_t *eng)
-{
-    assert(eng && eng->desc);
-    return eng->desc->read_registers(eng);
-}
-
-void engine_dump_registers(engine_t *eng)
-{
-    assert(eng && eng->desc);
-    eng->desc->read_registers(eng);
-    eng->desc->dump_registers(eng);
-}
+#endif /* HAVE_LIBUNICORN */

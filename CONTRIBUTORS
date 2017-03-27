@@ -1,2 +1,7 @@
-Matt Davis <enferex> -- github.com/enferex -- Initial idea and code.
-sibios -- github.com/sibios -- Keystone and Unicorn support.
+Matt Davis <enferex>
+    github.com/enferex
+    Initial idea and code.
+
+sibios
+    github.com/sibios
+    Keystone and Unicorn support including x8632, arm, mips32.

@@ -6,7 +6,7 @@
 #include "config.h"
 
 /* Return an engine */
-extern engine_t *engine_init(engine_e type);
+extern engine_t *engine_init(asrepl_t *asr, engine_e type);
 
 /* Execute the instructions */
 extern void engine_execute(engine_t *eng, const ctx_t *ctx);

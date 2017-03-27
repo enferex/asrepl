@@ -38,6 +38,14 @@
 #include "registers.h"
 #include "config.h"
 
+#ifdef HAVE_LIBUNICORN
+#include <unicorn/unicorn.h>
+#endif
+#ifdef HAVE_LIBKEYSTONE
+#include <keystone/keystone.h>
+#endif
+
+
 /* The machine code */
 typedef struct _context_t
 {
@@ -82,6 +90,11 @@ typedef struct _assembler_t
     /* Some assemblers have a handle (e.g., api/library based assemblers) */
     assembler_h handle;
 
+#ifdef HAVE_LIBKEYSTONE
+    ks_arch march;
+    ks_mode mmode;
+#endif
+ 
     /* Description */
     const struct _assembler_desc_t *desc;
 } assembler_t;
@@ -105,35 +118,43 @@ typedef short mode_e;
 typedef enum
 {
     ENGINE_INVALID = 0,
-    ENGINE_NATIVE,
+    ENGINE_NATIVE_X8664,
 #ifdef HAVE_LIBUNICORN
-    ENGINE_UNICORN,
+    ENGINE_UNICORN_X8632,
+    ENGINE_UNICORN_X8664,
+    ENGINE_UNICORN_ARM,
+    ENGINE_UNICORN_MIPS32,
 #endif
     ENGINE_MAX
 } engine_e;
 
 /* Routines that each engine must supply. */
 struct _engine_t;
+struct _asrepl_t;
 typedef struct _engine_desc_t
 {
     engine_e type;
 
     /* Callbacks */
-    _Bool (*init)           (struct _engine_t  *eng);
-    void  (*execute)        (struct _engine_t  *eng, const ctx_t *ctx);
-    _Bool (*shutdown)       (struct _engine_t  *eng);
-    void  (*read_registers) (struct _engine_t  *eng);
-    void  (*dump_registers) (struct _engine_t  *eng);
+    _Bool (*init)           (struct _asrepl_t *asr, struct _engine_t  *eng);
+    void  (*execute)        (struct _engine_t *eng, const ctx_t *ctx);
+    _Bool (*shutdown)       (struct _engine_t *eng);
+    void  (*read_registers) (struct _engine_t *eng);
+    void  (*dump_registers) (struct _engine_t *eng);
 } engine_desc_t;
 
 /* Execution engine (native is default and uses a fork'd process + ptrace) */
 typedef void *engine_h;
 typedef struct _engine_t
 {
-    engine_h             handle;
-    pid_t                engine_pid;
-    engine_h             state;
-    registers_u          registers;
+    engine_h    handle;
+    pid_t       engine_pid;
+    engine_h    state;
+    registers_u registers;
+#ifdef HAVE_LIBUNICORN
+    uc_arch     march;
+    uc_mode     mmode;
+#endif
     const engine_desc_t *desc;
 } engine_t;
 
@@ -141,6 +162,7 @@ typedef struct _engine_t
 typedef struct _asrepl_t
 {
     mode_e       mode;
+    isa_e        isa;
     assembler_t *assembler;
     engine_t    *engine;
     macro_t     *macros;

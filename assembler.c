@@ -44,13 +44,10 @@
 #define ASM_OBJ   "./.asrepl.temp.o"
 #define ASM_SRC   "./.asrepl.temp.s"
 #define REDIR     "2>&1 1>/dev/null"
-#define ASM_FLAGS "--64"
-#define ASM_CMD   ASSEMBLER " " ASM_SRC " " ASM_FLAGS " -o " ASM_OBJ " " REDIR
+#define ASM_CMD   ASSEMBLER " " ASM_SRC " -o " ASM_OBJ " " REDIR
 
 #ifdef HAVE_LIBKEYSTONE
 #include <keystone/keystone.h>
-#define ARCH KS_ARCH_X86
-#define MODE KS_MODE_64
 #endif /* HAVE_LIBKEYSTONE */
 
 /* Size agnostic ELF section header */
@@ -69,10 +66,8 @@ typedef struct _shdr_t
 /* Assembler description. Static data for each assembler supported. */
 typedef struct _assembler_desc_t
 {
-    const char *flags;
-
     /* True: success, False: failure */
-    _Bool (*init)(assembler_t     *as); /* Initialize assembler */
+    _Bool (*init)(asrepl_t *asr, assembler_t *as); /* Initialize assembler */
     _Bool (*shutdown)(assembler_t *as); /* Stop and cleanup     */
 
     /* 'line' is the user-supplied assembly string. */
@@ -194,13 +189,56 @@ static _Bool gnu_assemble(assembler_t *as, const char *line, ctx_t *ctx)
 }
 
 #ifdef HAVE_LIBKEYSTONE
-static _Bool keystone_init(assembler_t *as)
+/* ISA is chosen via (-a) command line read from main.c
+ *
+ * XXX If this is updated, also update engines/unicorn.c
+ */
+static void keystone_set_config(assembler_t *as, isa_e isa)
+{
+    switch (isa) {
+    case ISA_ARM:
+        as->march = KS_ARCH_ARM;
+        as->mmode = KS_MODE_ARM;
+        break;
+
+    case ISA_ARM64:
+        as->march = KS_ARCH_ARM64;
+        as->mmode = KS_MODE_ARM;
+        break;
+
+    /* x86 */
+    case ISA_X8632:
+        as->march = KS_ARCH_X86;
+        as->mmode = KS_MODE_32;
+        break;
+
+    /* x86-64 */
+    case ISA_X8664:
+        as->march = KS_ARCH_X86;
+        as->mmode = KS_MODE_64;
+        break;
+
+    case ISA_MIPS32:
+        as->march = KS_ARCH_MIPS;
+        as->mmode = KS_MODE_MIPS32 | KS_MODE_BIG_ENDIAN;
+        break;
+
+    default:
+         ERF("Invalid arch (-a) specified.");
+    }
+}
+#endif /* HAVE_LIBKEYSTONE */
+
+#ifdef HAVE_LIBKEYSTONE
+static _Bool keystone_init(asrepl_t *asr, assembler_t *as)
 {
     ks_engine *ks;
     ks_err err;
 
-    err = ks_open(ARCH,MODE,&ks);
-    if(err != KS_ERR_OK)
+    keystone_set_config(as, asr->isa);
+
+    err = ks_open(as->march, as->mmode, &ks);
+    if (err != KS_ERR_OK)
       return false;
 
     if (as->handle)
@@ -258,20 +296,19 @@ static _Bool keystone_assemble(
 #endif /* HAVE_LIBKEYSTONE */
 
 /* Always true predicates (for convenience) */
-static _Bool yes_init(assembler_t     *unused) { return true; }
+static _Bool yes_init(asrepl_t *asr, assembler_t *unused) { return true; }
 static _Bool yes_shutdown(assembler_t *unused) { return true; }
 
 /* Array of all assemblers that we support */
 static const assembler_desc_t assemblers[] =
 {
-    [ASSEMBLER_GNU_AS_X8664] = {"--64", yes_init, yes_shutdown, gnu_assemble},
+    [ASSEMBLER_GNU_AS_X8664] = {yes_init, yes_shutdown, gnu_assemble},
 #ifdef HAVE_LIBKEYSTONE
-    [ASSEMBLER_KEYSTONE] = {NULL, keystone_init,
-                            keystone_shutdown, keystone_assemble},
+    [ASSEMBLER_KEYSTONE] = {keystone_init,keystone_shutdown,keystone_assemble},
 #endif
 };
 
-assembler_t *assembler_init(assembler_e type)
+assembler_t *assembler_init(asrepl_t *asr, assembler_e type)
 {
     assembler_t *as = calloc(1, sizeof(assembler_t));
     if (!as)
@@ -285,7 +322,7 @@ assembler_t *assembler_init(assembler_e type)
     as->desc = &assemblers[type];
     
     /* Initialize the assembler */
-    if (as->desc->init(as) == false)
+    if (as->desc->init(asr,as) == false)
       ERF("Error initializing assembler.");
 
     return as;

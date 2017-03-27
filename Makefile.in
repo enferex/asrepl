@@ -2,8 +2,12 @@ APP       = asrepl
 CC        = @CC@
 CFLAGS    = @CFLAGS@ -Wall -DASSEMBLER=\"$(AS)\"
 LDFLAGS   = @LIBS@ @LDFLAGS@
-ENGINES   = engines/common_x8664.c \
-	        engines/native_x8664.c engines/unicorn_x8664.c
+ENGINES   = engines/common.c       \
+	        engines/native_x86.c   \
+			engines/unicorn.c      \
+			engines/unicorn_x86.c  \
+			engines/unicorn_arm.c  \
+			engines/unicorn_mips.c
 SRCS      = main.c commands.c asrepl.c assembler.c tui.c engine.c $(ENGINES)
 OBJS      = $(SRCS:.c=.o)
 

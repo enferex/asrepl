@@ -43,7 +43,10 @@ typedef const engine_desc_t *(*registration_cb)(void);
 /* Forward declarations */
 extern const engine_desc_t *native_x8664_registration(void);
 #ifdef HAVE_LIBUNICORN
+extern const engine_desc_t *unicorn_x8632_registration(void);
 extern const engine_desc_t *unicorn_x8664_registration(void);
+extern const engine_desc_t *unicorn_arm_registration(void);
+extern const engine_desc_t *unicorn_mips32_registration(void);
 #endif
 
 /* List of all registrations */
@@ -51,6 +54,8 @@ static const registration_cb engine_registrations[] = {
     native_x8664_registration,
 #ifdef HAVE_LIBUNICORN
     unicorn_x8664_registration,
+    unicorn_arm_registration,
+    unicorn_mips32_registration
 #endif
 };
 
