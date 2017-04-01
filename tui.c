@@ -35,21 +35,19 @@
 #include <ncurses.h>
 #include <panel.h>
 #include <string.h>
+#include "asrepl.h"
 #include "tui.h"
 
 #define ROWS LINES
 
 /* Only accessable from tui.c */
-static WINDOW *reg_win, *out_win, *stat_win, *repl_win;
-static PANEL  *reg_pan, *out_pan, *stat_pan, *repl_pan;
+static WINDOW *reg_win, *out_win, *stat_win, *repl_win, *input_win;
+static PANEL  *reg_pan, *out_pan, *stat_pan, *repl_pan, *input_pan;
 
 void tui_init(void)
 {
     int r, c;
     initscr();
-    nl();                 /* Display the newline                           */
-    raw();                /* Disable buffer ing and recv ctrl-c and ctrl-z */
-    keypad(stdscr, TRUE); /* Enable keypad and arrows                      */
 
     r = (ROWS * 2) / 3;
     c = COLS / 3;
@@ -69,20 +67,23 @@ void tui_init(void)
     box(stat_win, 0, 0);
     mvwprintw(stat_win, 0, 3, "=[ Status ]=");
 
-    /* REPL window (bottom) */
-    repl_win = newwin(ROWS-r, COLS,  r, 0);
-    scrollok(repl_win, TRUE);
+    /* REPL window frame (bottom) */
+    repl_win = newwin(ROWS-r, COLS, r, 0);
     box(repl_win, 0, 0);
     mvwprintw(repl_win, 0, 3, "=[ Input/Output ]=");
+
+    /* REPL... the actual input window */
+    input_win = newwin(ROWS-r-2, COLS-2, r + 1, 1);
+    box(input_win, 0, 0);
+    scrollok(input_win, TRUE);
+    wsetscrreg(input_win, 0, ROWS-r-2);
     
     /* Panels */ 
-    stat_pan = new_panel(stat_win);
-    reg_pan  = new_panel(reg_win);
-    out_pan  = new_panel(out_win);
-    repl_pan = new_panel(repl_win);
-    
-    /* Place the cursor in the repl */
-    wmove(repl_win, 10, 2);
+    stat_pan  = new_panel(stat_win);
+    reg_pan   = new_panel(reg_win);
+    out_pan   = new_panel(out_win);
+    repl_pan  = new_panel(repl_win);
+    input_pan = new_panel(input_win);
 
     /* Draw */
     tui_update();
@@ -91,7 +92,9 @@ void tui_init(void)
 char *tui_readline(const char *prompt)
 {
     char buffer[128+1] = {0};
-    wgetstr(repl_win, buffer);
+    const int r = (ROWS * 2) / 3;
+    mvprintw(input_win, 0, ROWS-r-2, "%s >", prompt);
+    wgetstr(input_win, buffer);
     return strdup(buffer);
 }
 
