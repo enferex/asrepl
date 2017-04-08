@@ -111,6 +111,7 @@ void tui_write(tui_window_e windex, const char *fmt, ...)
     va_start(vlist, fmt);
     vwprintw(win, fmt, vlist);
     va_end(vlist);
+    wrefresh(win);
 }
 
 void tui_update(void)
