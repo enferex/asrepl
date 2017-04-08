@@ -49,39 +49,44 @@ static PANEL  *tui_pans[TUI_WIN_MAX];
 void tui_init(void)
 {
     int r, c;
-    WINDOW *reg_win, *stat_win, *frame_win, *input_win;
+    WINDOW *reg_win, *status_win, *repl_win;
+    WINDOW *regframe_win, *statusframe_win, *replframe_win;
     
     initscr();
     r = (ROWS * 2) / 3;
     c = COLS / 2;
 
     /* Register windows (top left) */
-    reg_win = tui_wins[TUI_WIN_REG] = newwin(r, c, 0, 0);
-    box(reg_win, 0, 0);
-    mvwprintw(reg_win, 0, 3, "=[ Registers ]=");
-    wmove(reg_win, 1, 1);
+    regframe_win = tui_wins[TUI_WIN_REGFRAME] = newwin(r, c, 0, 0);
+    box(regframe_win, 0, 0);
+    mvwprintw(regframe_win, 0, 3, "=[ Registers ]=");
+    reg_win = tui_wins[TUI_WIN_REG] = newwin(r-2, c-2, 1, 1);
+    scrollok(reg_win, TRUE);
 
     /* Status window (top right) */
-    stat_win = tui_wins[TUI_WIN_STATUS] = newwin(r, c, 0, c*1);
-    box(stat_win, 0, 0);
-    mvwprintw(stat_win, 0, 3, "=[ Status ]=");
-    wmove(stat_win, 1, 1);
+    statusframe_win = tui_wins[TUI_WIN_STATUSFRAME] = newwin(r, c, 0, c*1);
+    box(statusframe_win, 0, 0);
+    mvwprintw(statusframe_win, 0, 3, "=[ Status ]=");
+    status_win = tui_wins[TUI_WIN_STATUS] = newwin(r-2, c-2, 1, 1);
+    scrollok(status_win, TRUE);
 
     /* REPL window frame (bottom, just for the border) */
-    frame_win = tui_wins[TUI_WIN_FRAME] = newwin(ROWS-r, COLS, r, 0);
-    box(frame_win, 0, 0);
-    mvwprintw(frame_win, 0, 3, "=[ Input/Output ]=");
+    replframe_win = tui_wins[TUI_WIN_REPLFRAME] = newwin(ROWS-r, COLS, r, 0);
+    box(replframe_win, 0, 0);
+    mvwprintw(replframe_win, 0, 3, "=[ Input/Output ]=");
 
     /* REPL... the actual input window */
-    input_win = tui_wins[TUI_WIN_REPL] = newwin(ROWS-r-2, COLS-2, r + 1, 1);
-    scrollok(input_win, TRUE);
-    wsetscrreg(input_win, 0, ROWS-r-2);
+    repl_win = tui_wins[TUI_WIN_REPL] = newwin(ROWS-r-2, COLS-2, r + 1, 1);
+    scrollok(repl_win, TRUE);
+    wsetscrreg(repl_win, 0, ROWS-r-2);
     
     /* Panels */ 
-    tui_pans[TUI_WIN_STATUS] = new_panel(stat_win);
-    tui_pans[TUI_WIN_REG]    = new_panel(reg_win);
-    tui_pans[TUI_WIN_FRAME]  = new_panel(frame_win);
-    tui_pans[TUI_WIN_REPL]   = new_panel(input_win);
+    tui_pans[TUI_WIN_STATUSFRAME] = new_panel(statusframe_win);
+    tui_pans[TUI_WIN_STATUS]      = new_panel(status_win);
+    tui_pans[TUI_WIN_REGFRAME]    = new_panel(regframe_win);
+    tui_pans[TUI_WIN_REG]         = new_panel(reg_win);
+    tui_pans[TUI_WIN_REPLFRAME]   = new_panel(replframe_win);
+    tui_pans[TUI_WIN_REPL]        = new_panel(repl_win);
 
     /* Draw */
     tui_update();

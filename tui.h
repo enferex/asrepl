@@ -36,11 +36,13 @@
 
 typedef enum _tui_window_e
 {
-    TUI_WIN_REPL,   /* REPL input/output window   */
-    TUI_WIN_STATUS, /* Miscelaneous window        */
-    TUI_WIN_REG,    /* Register window            */
-    TUI_WIN_FRAME,  /* Do not use, only a border  */
-    TUI_WIN_MAX     /* Max max count of this enum */
+    TUI_WIN_REPL,        /* REPL input/output window   */
+    TUI_WIN_STATUS,      /* Miscelaneous window        */
+    TUI_WIN_REG,         /* Register window            */
+    TUI_WIN_REPLFRAME,   /* Do not use, only a border  */
+    TUI_WIN_STATUSFRAME, /* Do not use, only a border  */
+    TUI_WIN_REGFRAME,    /* Do not use, only a border  */
+    TUI_WIN_MAX          /* Max max count of this enum */
 } tui_window_e;
 
 #ifdef HAVE_LIBNCURSES
