@@ -68,7 +68,7 @@ void tui_init(void)
     box(stat_win, 0, 0);
     mvwprintw(stat_win, 0, 3, "=[ Status ]=");
 
-    /* REPL window frame (bottom) */
+    /* REPL window frame (bottom, just for the border) */
     repl_win = newwin(ROWS-r, COLS, r, 0);
     box(repl_win, 0, 0);
     mvwprintw(repl_win, 0, 3, "=[ Input/Output ]=");
