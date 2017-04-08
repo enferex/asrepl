@@ -31,14 +31,27 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 #include <stdio.h>
+#include "../config.h"
+#include "../asrepl.h"
 #include "../asrepl_types.h"
+#include "../tui.h"
 #include "common.h"
 
-#define REG32(_eng, _reg, _acc) \
-    printf("%s\t 0x%x\n", #_reg, _acc(_eng)._reg)
+#define REG32(_eng, _reg, _acc)                                          \
+    do {                                                                 \
+        if (asrepl_mode() & MODE_TUI)                                    \
+          tui_write(TUI_WIN_REG, "%s\t 0x%x\n", #_reg, _acc(_eng)._reg); \
+        else                                                             \
+          printf("%s\t 0x%x\n", #_reg, _acc(_eng)._reg);                 \
+    } while (0)
 
-#define REG64(_eng, _reg, _acc) \
-    printf("%s\t 0x%lx\n", #_reg, _acc(_eng)._reg)
+#define REG64(_eng, _reg, _acc)                                           \
+    do {                                                                  \
+        if (asrepl_mode() & MODE_TUI)                                     \
+          tui_write(TUI_WIN_REG, "%s\t 0x%lx\n", #_reg, _acc(_eng)._reg); \
+        else                                                              \
+          printf("%s\t 0x%lx\n", #_reg, _acc(_eng)._reg);                 \
+    } while (0)
 
 void common_x8632_dump_registers(engine_t *eng)
 {

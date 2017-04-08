@@ -37,8 +37,9 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/user.h>
-#include "asrepl_types.h"
 #include "config.h"
+#include "asrepl_types.h"
+#include "tui.h"
 
 #define NAME       "asrepl"
 #define MAJOR      0
@@ -65,20 +66,36 @@
 /* When querying a macro, the prefix must be used <prefix><macroname> */
 #define MACRO_PREFIX "@"
 
-#define PR(_msg, ...)\
-    fprintf(stdout, TAG PROMPTC _msg "\n", ##__VA_ARGS__)
 
-#define PRINT(_msg, ...)\
-    fprintf(stdout, _msg "\n", ##__VA_ARGS__)
-
-#define ERR(_msg, ...) \
-    fprintf(stderr, ERROR_PROMPT _msg  "\n", ##__VA_ARGS__)
-
-#define ERF(_msg, ...)                                                       \
-    do {                                                                     \
-        fprintf(stderr, ERROR_PROMPT _msg  "\n", ##__VA_ARGS__); \
-        exit(EXIT_FAILURE);                                                  \
+#define PRINT(_msg, ...)                                   \
+    do {                                                   \
+      if (asrepl_mode() & MODE_TUI)                        \
+        tui_write(TUI_WIN_REPL, _msg "\n", ##__VA_ARGS__); \
+      else                                                 \
+        fprintf(stdout, _msg "\n", ##__VA_ARGS__);         \
     } while (0)
+
+
+#define ERR(_msg, ...)                                                         \
+    do {                                                                       \
+        if (asrepl_mode() & MODE_TUI)                                          \
+            tui_write(TUI_WIN_STATUS, ERROR_PROMPT _msg  "\n", ##__VA_ARGS__); \
+        else                                                                   \
+            fprintf(stderr, ERROR_PROMPT _msg  "\n", ##__VA_ARGS__);           \
+    } while (0)
+
+
+#define ERF(_msg, ...)                                                         \
+    do {                                                                       \
+        if (asrepl_mode() & MODE_TUI) {                                        \
+            tui_write(TUI_WIN_STATUS, ERROR_PROMPT _msg  "\n", ##__VA_ARGS__); \
+            tui_exit();                                                        \
+        }                                                                      \
+        else                                                                   \
+          fprintf(stderr, ERROR_PROMPT _msg  "\n", ##__VA_ARGS__);             \
+        exit(EXIT_FAILURE);                                                    \
+    } while (0)
+
 
 /* Ptrace operates on word size thingies */
 typedef unsigned long word_t;
@@ -119,5 +136,8 @@ extern void     asrepl_macro_end(asrepl_t *asr);
 extern void     asrepl_macro_add_ctx(asrepl_t *asr, ctx_t *ctx);
 extern void     asrepl_macro_execute(asrepl_t *asr, const char *name);
 extern macro_t *asrepl_macro_find(asrepl_t *asr, const char *name);
+
+/* Check the global mode flags ... encapsulated in asrepl.c */
+extern mode_e asrepl_mode(void);
 
 #endif /* __ASREPL_H */

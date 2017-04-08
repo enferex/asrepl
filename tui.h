@@ -31,19 +31,19 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 #include "config.h"
-#ifdef HAVE_LIBNCURSES
 #ifndef __TUI_H
 #define __TUI_H
 
 typedef enum _tui_window_e
 {
-    TUI_WINDOW_REPL,   /* REPL input/output window   */
-    TUI_WINDOW_STATUS, /* Miscelaneous window        */
-    TUI_WINDOW_REG,    /* Register window            */
-    TUI_WINDOW_FRAME,  /* Do not use, only a border  */
-    TUI_WINDOW_MAX     /* Max max count of this enum */
+    TUI_WIN_REPL,   /* REPL input/output window   */
+    TUI_WIN_STATUS, /* Miscelaneous window        */
+    TUI_WIN_REG,    /* Register window            */
+    TUI_WIN_FRAME,  /* Do not use, only a border  */
+    TUI_WIN_MAX     /* Max max count of this enum */
 } tui_window_e;
 
+#ifdef HAVE_LIBNCURSES
 /* Text User Interface (requires ncurses support) */
 extern void tui_init(void);
 extern void tui_update(void);
@@ -53,5 +53,5 @@ extern void tui_write(tui_window_e windex, const char *fmt, ...);
 /* The returned string is from strdup, call free() when done. */
 extern char *tui_readline(const char *prompt);
 
-#endif /* __TUI_H         */
 #endif /* HAVE_LIBNCURSES */
+#endif /* __TUI_H         */
