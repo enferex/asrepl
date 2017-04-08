@@ -47,6 +47,9 @@
 /* Declared in asrepl.h */
 char *prompt = NULL;
 
+/* Global instance (for mode information) */
+static asrepl_t *global_asr;
+
 #ifdef HAVE_LIBUNICORN
 #include <unicorn/unicorn.h>
 #endif
@@ -61,8 +64,9 @@ asrepl_t *asrepl_init(
     if (!asr)
       ERF("Error allocating memory for the asrepl handle.");
 
-    asr->isa  = isa_type;
-    asr->mode = MODE_NORMAL;
+    asr->isa   = isa_type;
+    asr->mode  = MODE_NORMAL;
+    global_asr = asr;
 
     /* Choose and initialize the assembler */
     if (!(asr->assembler = assembler_init(asr, assembler_type)))
@@ -355,4 +359,9 @@ const char* isa_all_names(void)
     }
 
     return buffer;
+}
+
+mode_e asrepl_mode(void)
+{
+    return (global_asr) ? global_asr->mode : MODE_NORMAL;
 }
