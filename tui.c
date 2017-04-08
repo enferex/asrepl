@@ -32,10 +32,11 @@
  ******************************************************************************/
 #include "config.h"
 #ifdef HAVE_LIBNCURSES
+#include "asrepl.h"
+#undef ERR
 #include <ncurses.h>
 #include <panel.h>
 #include <string.h>
-#include "asrepl.h"
 #include "tui.h"
 
 #define ROWS LINES
@@ -74,7 +75,6 @@ void tui_init(void)
 
     /* REPL... the actual input window */
     input_win = newwin(ROWS-r-2, COLS-2, r + 1, 1);
-    box(input_win, 0, 0);
     scrollok(input_win, TRUE);
     wsetscrreg(input_win, 0, ROWS-r-2);
     
@@ -91,10 +91,10 @@ void tui_init(void)
 
 char *tui_readline(const char *prompt)
 {
-    char buffer[128+1] = {0};
+    char buffer[MAX_ASM_LINE] = {0};
     const int r = (ROWS * 2) / 3;
-    mvprintw(input_win, 0, ROWS-r-2, "%s >", prompt);
-    wgetstr(input_win, buffer);
+    mvwprintw(input_win, ROWS-r-3, 0, prompt);
+    mvwgetnstr(input_win, ROWS-r-3, strlen(prompt), buffer, MAX_ASM_LINE-1);
     return strdup(buffer);
 }
 
