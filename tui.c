@@ -43,48 +43,43 @@
 #define ROWS LINES
 
 /* Only accessable from tui.c */
-static WINDOW *reg_win, *out_win, *stat_win, *repl_win, *input_win;
-static PANEL  *reg_pan, *out_pan, *stat_pan, *repl_pan, *input_pan;
+static WINDOW *tui_wins[TUI_WINDOW_MAX];
+static PANEL  *tui_pans[TUI_WINDOW_MAX];
 
 void tui_init(void)
 {
     int r, c;
+    WINDOW *reg_win, *stat_win, *frame_win, *input_win;
+    
     initscr();
-
     r = (ROWS * 2) / 3;
-    c = COLS / 3;
+    c = COLS / 2;
 
     /* Register windows (top left) */
-    reg_win = newwin(r, c, 0, 0);
+    reg_win = tui_wins[TUI_WINDOW_REG] = newwin(r, c, 0, 0);
     box(reg_win, 0, 0);
     mvwprintw(reg_win, 0, 3, "=[ Registers ]=");
 
-    /* Output window (top middle) */
-    out_win = newwin(r, c, 0, c*1);
-    box(out_win, 0, 0);
-    mvwprintw(out_win, 0, 3, "=[ Macros ]=");
-    
     /* Status window (top right) */
-    stat_win = newwin(r, c, 0, c*2);
+    stat_win = tui_wins[TUI_WINDOW_STATUS] = newwin(r, c, 0, c*1);
     box(stat_win, 0, 0);
     mvwprintw(stat_win, 0, 3, "=[ Status ]=");
 
     /* REPL window frame (bottom, just for the border) */
-    repl_win = newwin(ROWS-r, COLS, r, 0);
-    box(repl_win, 0, 0);
-    mvwprintw(repl_win, 0, 3, "=[ Input/Output ]=");
+    frame_win = tui_wins[TUI_WINDOW_FRAME] = newwin(ROWS-r, COLS, r, 0);
+    box(frame_win, 0, 0);
+    mvwprintw(frame_win, 0, 3, "=[ Input/Output ]=");
 
     /* REPL... the actual input window */
-    input_win = newwin(ROWS-r-2, COLS-2, r + 1, 1);
+    input_win = tui_wins[TUI_WINDOW_REPL] = newwin(ROWS-r-2, COLS-2, r + 1, 1);
     scrollok(input_win, TRUE);
     wsetscrreg(input_win, 0, ROWS-r-2);
     
     /* Panels */ 
-    stat_pan  = new_panel(stat_win);
-    reg_pan   = new_panel(reg_win);
-    out_pan   = new_panel(out_win);
-    repl_pan  = new_panel(repl_win);
-    input_pan = new_panel(input_win);
+    tui_pans[TUI_WINDOW_STATUS] = new_panel(stat_win);
+    tui_pans[TUI_WINDOW_REG]    = new_panel(reg_win);
+    tui_pans[TUI_WINDOW_FRAME]  = new_panel(frame_win);
+    tui_pans[TUI_WINDOW_REPL]   = new_panel(input_win);
 
     /* Draw */
     tui_update();
@@ -94,9 +89,26 @@ char *tui_readline(const char *prompt)
 {
     char buffer[MAX_ASM_LINE] = {0};
     const int r = (ROWS * 2) / 3;
-    mvwprintw(input_win, ROWS-r-3, 0, prompt);
-    mvwgetnstr(input_win, ROWS-r-3, strlen(prompt), buffer, MAX_ASM_LINE-1);
+    WINDOW *win = tui_wins[TUI_WINDOW_REPL];
+    mvwprintw(win, ROWS-r-3, 0, prompt);
+    mvwgetnstr(win, ROWS-r-3, strlen(prompt), buffer, MAX_ASM_LINE-1);
     return strdup(buffer);
+}
+
+void tui_write(tui_window_e windex, const char *fmt, ...)
+{
+    va_list vlist;
+    WINDOW *win;
+
+    if (windex < 0 || windex >= TUI_WINDOW_MAX)
+      return; /* Invalid */
+
+    if ((win = tui_wins[windex]) == NULL)
+      return;
+
+    va_start(vlist, fmt);
+    vwprintw(win, fmt, vlist);
+    va_end(vlist);
 }
 
 void tui_update(void)

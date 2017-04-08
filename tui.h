@@ -35,11 +35,20 @@
 #ifndef __TUI_H
 #define __TUI_H
 
-/* Text User Interface (requires ncurses support) */
+typedef enum _tui_window_e
+{
+    TUI_WINDOW_REPL,   /* REPL input/output window   */
+    TUI_WINDOW_STATUS, /* Miscelaneous window        */
+    TUI_WINDOW_REG,    /* Register window            */
+    TUI_WINDOW_FRAME,  /* Do not use, only a border  */
+    TUI_WINDOW_MAX     /* Max max count of this enum */
+} tui_window_e;
 
+/* Text User Interface (requires ncurses support) */
 extern void tui_init(void);
 extern void tui_update(void);
 extern void tui_exit(void); /* Stop/shutdown the TUI */
+extern void tui_write(tui_window_e windex, const char *fmt, ...);
 
 /* The returned string is from strdup, call free() when done. */
 extern char *tui_readline(const char *prompt);
