@@ -34,6 +34,7 @@
 #ifdef HAVE_LIBNCURSES
 #include "asrepl.h"
 #undef ERR
+#include <stdarg.h>
 #include <ncurses.h>
 #include <panel.h>
 #include <string.h>
