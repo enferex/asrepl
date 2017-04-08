@@ -45,6 +45,8 @@
 #define MINOR      1
 #define YEAR       2017
 #define TAG        "asm"
+
+/* Multi arch ... it's what the people crave */
 #if defined(HAVE_LIBUNICORN) && defined(HAVE_LIBKEYSTONE)
 #define MULTI_ARCH
 #endif
