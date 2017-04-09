@@ -143,6 +143,10 @@ void asrepl_read_registers(asrepl_t *asr)
 void asrepl_dump_registers(asrepl_t *asr)
 {
     assert(asr);
+#ifdef HAVE_LIBNCURSES
+    if (asr->mode & MODE_TUI)
+      tui_reset(TUI_WIN_REG);
+#endif
     engine_dump_registers(asr->engine);
 }
 

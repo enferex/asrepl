@@ -130,4 +130,19 @@ void tui_exit(void)
     endwin();
 }
 
+void tui_reset(tui_window_e windex)
+{
+    WINDOW *win;
+
+    if (windex < 0 || windex >= TUI_WIN_MAX)
+      return; /* Invalid */
+
+    if ((win = tui_wins[windex]) == NULL)
+      return;
+
+    wmove(win, 0, 0);
+}
+
+
+
 #endif /* HAVE_LIBNCURSES */

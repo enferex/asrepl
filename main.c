@@ -114,17 +114,20 @@ static void repl(asrepl_t *asr)
         /* The assembly was generated correctly, execute it.
          * If we are building a macro, do not execute while building it.
          */
-        if (asm_result == true && asr->mode != MODE_MACRO)
-          asrepl_execute(asr, ctx);
+        if (asm_result == true && !(asr->mode & MODE_MACRO)) {
+            asrepl_execute(asr, ctx);
+            if (asr->mode & MODE_TUI)
+              asrepl_dump_registers(asr);
+        }
 
         /* If we are in macro mode, and assembled successful, keep the ctx */
-        if (asr->mode == MODE_MACRO && asm_result == true)
+        if ((asr->mode & MODE_MACRO) && asm_result == true)
           asrepl_macro_add_ctx(asr, ctx);
         else
           asrepl_delete_ctx(ctx);
 
         /* We only keep track of libreadline lines */
-        if (asr->mode == MODE_TUI)
+        if (asr->mode & MODE_TUI)
           free(line);
         else
           add_history(line);

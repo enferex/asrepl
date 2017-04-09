@@ -55,5 +55,10 @@ extern void tui_write(tui_window_e windex, const char *fmt, ...);
 /* The returned string is from strdup, call free() when done. */
 extern char *tui_readline(const char *prompt);
 
+/* Set the output to be at the start of the window (to overwrite 
+ * previous text).
+ */
+extern void tui_reset(tui_window_e windex);
+
 #endif /* HAVE_LIBNCURSES */
 #endif /* __TUI_H         */
