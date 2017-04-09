@@ -134,7 +134,7 @@ static void repl(asrepl_t *asr)
             time(&now);
             ctime_r(&now, buf);
             buf[strlen(buf)-1] = '\0';
-            tui_write(TUI_WIN_STATUS, "[%s] %s", buf, line);
+            tui_write(TUI_WIN_STATUS, "[%s] %s\n", buf, line);
             free(line);
         }
         else
