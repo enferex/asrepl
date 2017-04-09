@@ -45,8 +45,8 @@ Dependencies (for default x8664 asm operation)
 3. I've only tested this on Linux.
 4. Optional: Keystone and Unicorn Engine (for arm, mips, x8632 support).
 
-Thanks
-------
+Thanks!
+-------
 Special thanks goes out to sibios who added the Keystone and Unicorn support.
 That feature allows asrepl to act as a repl for a multitude of architectures.
 
