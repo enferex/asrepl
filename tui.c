@@ -51,7 +51,7 @@ void tui_init(void)
     int r, c;
     WINDOW *reg_win, *status_win, *repl_win;
     WINDOW *regframe_win, *statusframe_win, *replframe_win;
-    
+
     initscr();
     r = (ROWS * 2) / 3;
     c = COLS / 2;
@@ -79,8 +79,8 @@ void tui_init(void)
     repl_win = tui_wins[TUI_WIN_REPL] = newwin(ROWS-r-2, COLS-2, r + 1, 1);
     scrollok(repl_win, TRUE);
     wsetscrreg(repl_win, 0, ROWS-r-2);
-    
-    /* Panels */ 
+
+    /* Panels */
     tui_pans[TUI_WIN_STATUSFRAME] = new_panel(statusframe_win);
     tui_pans[TUI_WIN_STATUS]      = new_panel(status_win);
     tui_pans[TUI_WIN_REGFRAME]    = new_panel(regframe_win);
@@ -142,7 +142,5 @@ void tui_reset(tui_window_e windex)
 
     wmove(win, 0, 0);
 }
-
-
 
 #endif /* HAVE_LIBNCURSES */
