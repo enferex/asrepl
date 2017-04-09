@@ -110,7 +110,7 @@ void asrepl_delete_ctx(ctx_t *ctx)
 
 void asrepl_version(void)
 {
-    printf("%s v%d.%d, (c)%d\n", NAME, MAJOR, MINOR, YEAR);
+    PRINT("%s v%d.%d, (c)%d", NAME, MAJOR, MINOR, YEAR);
 }
 
 void asrepl_update_prompt(const char *new_prompt)
