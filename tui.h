@@ -34,6 +34,7 @@
 #ifndef __TUI_H
 #define __TUI_H
 
+
 typedef enum _tui_window_e
 {
     TUI_WIN_REPL,        /* REPL input/output window   */
@@ -44,6 +45,13 @@ typedef enum _tui_window_e
     TUI_WIN_REGFRAME,    /* Do not use, only a border  */
     TUI_WIN_MAX          /* Max max count of this enum */
 } tui_window_e;
+
+#ifndef HAVE_LIBNCURSES
+#define tui_init()
+#define tui_update()
+#define tui_exit()
+#define tui_write(...)
+#endif /* HAVE_LIBNCURSES */
 
 #ifdef HAVE_LIBNCURSES
 /* Text User Interface (requires ncurses support) */
