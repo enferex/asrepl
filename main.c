@@ -38,6 +38,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <unistd.h>
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -127,8 +128,15 @@ static void repl(asrepl_t *asr)
           asrepl_delete_ctx(ctx);
 
         /* We only keep track of libreadline lines */
-        if (asr->mode & MODE_TUI)
-          free(line);
+        if (asr->mode & MODE_TUI) {
+            time_t now;
+            char buf[32];
+            time(&now);
+            ctime_r(&now, buf);
+            buf[strlen(buf)-1] = '\0';
+            tui_write(TUI_WIN_STATUS, "[%s] %s", buf, line);
+            free(line);
+        }
         else
           add_history(line);
     }

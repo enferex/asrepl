@@ -20,7 +20,8 @@ AC_CHECK_LIB([ncurses],  [initscr])
 AC_CHECK_LIB([panel],    [new_panel])
 
 # Checks for header files.
-AC_CHECK_HEADERS([stdarg.h stdint.h stdlib.h string.h unistd.h ncurses.h panel.h])
+AC_CHECK_HEADERS([stdarg.h stdint.h stdlib.h string.h \
+                  time.h unistd.h ncurses.h panel.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_CHECK_HEADER_STDBOOL

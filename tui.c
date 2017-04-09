@@ -64,10 +64,10 @@ void tui_init(void)
     scrollok(reg_win, TRUE);
 
     /* Status window (top right) */
-    statusframe_win = tui_wins[TUI_WIN_STATUSFRAME] = newwin(r, c, 0, c*1);
+    statusframe_win = tui_wins[TUI_WIN_STATUSFRAME] = newwin(r, c, 0, c);
     box(statusframe_win, 0, 0);
     mvwprintw(statusframe_win, 0, 3, "=[ Status ]=");
-    status_win = tui_wins[TUI_WIN_STATUS] = newwin(r-2, c-2, 1, 1);
+    status_win = tui_wins[TUI_WIN_STATUS] = newwin(r-2, c-2, 1, c+1);
     scrollok(status_win, TRUE);
 
     /* REPL window frame (bottom, just for the border) */
