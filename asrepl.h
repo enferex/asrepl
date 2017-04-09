@@ -41,11 +41,11 @@
 #include "asrepl_types.h"
 #include "tui.h"
 
-#define NAME       "asrepl"
-#define MAJOR      0
-#define MINOR      1
-#define YEAR       2017
-#define TAG        "asm"
+#define NAME   "asrepl"
+#define MAJOR  0
+#define MINOR  1
+#define YEAR   2017
+#define TAG    "asm"
 
 /* Multi arch ... it's what the people crave */
 #if defined(HAVE_LIBUNICORN) && defined(HAVE_LIBKEYSTONE)
@@ -76,24 +76,24 @@
     } while (0)
 
 
-#define ERR(_msg, ...)                                                         \
-    do {                                                                       \
-        if (asrepl_mode() & MODE_TUI)                                          \
-            tui_write(TUI_WIN_STATUS, ERROR_PROMPT _msg  "\n", ##__VA_ARGS__); \
-        else                                                                   \
-            fprintf(stderr, ERROR_PROMPT _msg  "\n", ##__VA_ARGS__);           \
+#define ERR(_msg, ...)                                                       \
+    do {                                                                     \
+        if (asrepl_mode() & MODE_TUI)                                        \
+            tui_write(TUI_WIN_REPL, ERROR_PROMPT _msg  "\n", ##__VA_ARGS__); \
+        else                                                                 \
+            fprintf(stderr, ERROR_PROMPT _msg  "\n", ##__VA_ARGS__);         \
     } while (0)
 
 
-#define ERF(_msg, ...)                                                         \
-    do {                                                                       \
-        if (asrepl_mode() & MODE_TUI) {                                        \
-            tui_write(TUI_WIN_STATUS, ERROR_PROMPT _msg  "\n", ##__VA_ARGS__); \
-            tui_exit();                                                        \
-        }                                                                      \
-        else                                                                   \
-          fprintf(stderr, ERROR_PROMPT _msg  "\n", ##__VA_ARGS__);             \
-        exit(EXIT_FAILURE);                                                    \
+#define ERF(_msg, ...)                                                       \
+    do {                                                                     \
+        if (asrepl_mode() & MODE_TUI) {                                      \
+            tui_write(TUI_WIN_REPL, ERROR_PROMPT _msg  "\n", ##__VA_ARGS__); \
+            tui_exit();                                                      \
+        }                                                                    \
+        else                                                                 \
+          fprintf(stderr, ERROR_PROMPT _msg  "\n", ##__VA_ARGS__);           \
+        exit(EXIT_FAILURE);                                                  \
     } while (0)
 
 
