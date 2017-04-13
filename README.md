@@ -47,7 +47,7 @@ Dependencies (for default x8664 asm operation)
 
 Thanks!
 -------
-Special thanks goes out to sibios who added the Keystone and Unicorn support.
+Special thanks goes out to [sibios](https://github.com/sibios) who added the Keystone and Unicorn support.
 That feature allows asrepl to act as a repl for a multitude of architectures.
 
 Contact
